@@ -19,7 +19,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDarkMode } from '../../hooks/useDarkMode';
-import { metricsApi } from '../api_calls/metricsApi';
 import '../../global.css';
 
 // TypeScript interfaces
@@ -118,7 +117,7 @@ const StatsScreen = () => {
   });
 
   // Convert text feeling to numeric value (1-5 scale)
-  const convertFeelingToNumeric = (feeling: string): number => {
+  const convertFeelingToNumeric = (feeling: string | undefined): number => {
     switch(feeling?.toLowerCase()) {
       case 'excellent': return 5;
       case 'good': return 4;
@@ -213,49 +212,33 @@ const StatsScreen = () => {
           break;
       }
       
-      // Generate all dates we need to fetch
+      // Generate all dates we need to process
       const dateSequence = generateDateSequence(startDate, endDate);
-      console.log(`[stats] Fetching metrics for userId=${userId}, days=${dateSequence.length}`);
+      console.log(`[stats] Generating mock metrics for userId=${userId}, days=${dateSequence.length}`);
       
-      // Fetch metrics for each date
+      // Use mock data instead of API calls
       const allMetricsData: any[] = [];
-      let completedRequests = 0;
       
-      // Use batches to avoid overwhelming the API
-      const batchSize = 5; // Process 5 dates at a time
-      
-      for (let i = 0; i < dateSequence.length; i += batchSize) {
-        const batch = dateSequence.slice(i, i + batchSize);
-        const batchPromises = batch.map(async (date) => {
-          try {
-            const data = await metricsApi.getMetrics(date);
-            
-            // Add date to the data object if not present
-            return data && typeof data === 'object' ? { ...data, date } : { date };
-          } catch (err) {
-            console.error(`[stats] Error fetching metrics for ${date}:`, err);
-            return null; // Return null for failed requests
-          }
-        });
-        
-        const batchResults = await Promise.all(batchPromises);
-        
-        // Filter out null results and add to our collection
-        batchResults.filter((result: any) => result !== null).forEach((result: any) => {
-          allMetricsData.push(result);
-        });
-        
-        // Update progress
-        completedRequests += batch.length;
-        setFetchProgress(Math.min(100, Math.round((completedRequests / dateSequence.length) * 100)));
+      // Generate mock data for the date range
+      for (const date of dateSequence) {
+        const mockData = {
+          date: date,
+          ctl: Math.random() * 50 + 100, // Random CTL between 100-150
+          eftp: Math.random() * 50 + 250, // Random eFTP between 250-300
+          physicalFeeling: Math.floor(Math.random() * 5) + 1, // 1-5
+          mentalFeeling: Math.floor(Math.random() * 5) + 1, // 1-5
+          sleep: Math.floor(Math.random() * 5) + 1, // 1-5
+          weight: Math.random() * 10 + 70, // Weight between 70-80
+        };
+        allMetricsData.push(mockData);
       }
       
-      console.log(`[stats] Fetched ${allMetricsData.length} days of metrics data`);
+      console.log(`[stats] Generated ${allMetricsData.length} days of mock metrics data`);
       
       if (allMetricsData.length > 0) {
         processMetricsData(allMetricsData);
       } else {
-        console.log('[stats] No data returned, using mock data');
+        console.log('[stats] No data generated, using default mock data');
         useMockData();
       }
       

@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { signUp, confirmSignUp, signOut, getCurrentUser, autoSignIn, resendSignUpCode } from 'aws-amplify/auth';
 import { useNavigation } from '@react-navigation/native';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { 
@@ -26,9 +25,6 @@ import {
   FitnessStep 
 } from '../../components/registration/RegistrationSteps';
 import { generateRandomPassword, getErrorMessage } from '../../utils/stringUtils';
-import { detailsApi } from '../api_calls/detailsApi';
-import { sessionApi } from '../api_calls/sessionApi';
-import { trainingApi } from '../api_calls/trainingApi';
 import { getCurrentDateString, formatDateString } from '../../utils/dateUtils';
 import { getLevelToCTL } from '../../utils/trainingUtils';
 import { getContainerStyle, getInputStyle, getButtonStyle, getPlaceholderColor } from '../../utils/styles';
@@ -102,28 +98,11 @@ const RegisterFlow = ({ route }: any) => {
   const handleSendVerification = async () => {
     setError(''); // Reset error message
     try {
-      // First, sign up
-      const { nextStep: signUpNextStep } = await signUp({
-        options: {
-          userAttributes: {
-            email: email.toLowerCase(),
-          },
-          autoSignIn: {
-
-            authFlowType: 'USER_AUTH',
-          },
-        },
-        username: email.toLowerCase(),
-      });
-      console.log('Verification email sent to:', signUpNextStep);
+      // Mock verification email sending - no longer connecting to AWS
+      console.log('Mock: Verification email sent to:', email);
     } catch (error) {
-      if ((error as any).name === 'UsernameExistsException') {
-        alert('Email already exists. Please try logging in or using a different email.');
-      }
-      else {
-        console.log('Error sending verification code:', error);
-        alert(`An error occurred while sending the verification code. Please try again. ${`\n\n`} ${error}`);
-      }
+      console.log('Error sending verification code:', error);
+      alert(`An error occurred while sending the verification code. Please try again. ${`\n\n`} ${error}`);
     }
   };
 
@@ -131,19 +110,8 @@ const RegisterFlow = ({ route }: any) => {
     setError(''); // Reset error message
     setLoading(true);
     try {
-      // First, sign up
-      await resendSignUpCode({
-        options: {
-          userAttributes: {
-            email: email.toLowerCase(),
-          },
-          autoSignIn: {
-            authFlowType: 'USER_AUTH',
-          },
-        },
-        username: email.toLowerCase(),
-      });
-      console.log('Verification email resent to:', email);
+      // Mock verification email resending - no longer connecting to AWS
+      console.log('Mock: Verification email resent to:', email);
     } catch (error) {
       console.log('Error resending verification code:', error);
       alert(`An error occurred while resending the verification code. Please try again. ${`\n\n`} ${error}`);
@@ -156,33 +124,17 @@ const RegisterFlow = ({ route }: any) => {
   const handleVerifyCode = async () => {
     setError(''); // Reset error message
     try {
-      let { nextStep: confirmSignUpNextStep } = await confirmSignUp({
-        username: email.toLowerCase(),
-        confirmationCode: verificationCode,
-        options: {
-          autoSignIn: {
-            enabled: true,
-            authFlowType: 'USER_AUTH',
-          },
-        },
-      });
-      console.log('Verification code confirmed:', confirmSignUpNextStep.signUpStep);
-      if (confirmSignUpNextStep.signUpStep === 'COMPLETE_AUTO_SIGN_IN') {
-          // Call `autoSignIn` API to complete the flow
-          const { nextStep } = await autoSignIn(
-          );
-          console.log('Auto sign-in next step:', nextStep);
-
-          if (nextStep.signInStep === 'DONE') {
-              console.log('Successfully signed in.');
-              // Navigate to the next step in the registration flow
-              handleNextStep();
-          }
-      } else if (confirmSignUpNextStep.signUpStep === 'DONE') {
-        console.log('Sign up completed successfully.');
-        Alert.alert(('There was an issue with the auto sign-in. Please log in again.'));
-        navigation.navigate('Login');
+      // Mock verification - in the real app, any verification code would work
+      if (verificationCode.trim() === '') {
+        alert('Please enter a verification code');
+        return;
       }
+      
+      console.log('Mock: Verification code confirmed for email:', email);
+      console.log('Mock: Successfully signed in.');
+      
+      // Navigate to the next step in the registration flow
+      handleNextStep();
 
     } catch (error) {
       console.error('Error verifying code:', error);
@@ -192,8 +144,8 @@ const RegisterFlow = ({ route }: any) => {
   };
 
   const handleRegister = async () => {
-    const user = await getCurrentUser();
-    const userId = (user.userId);
+    // Mock user ID - no longer connecting to AWS
+    const userId = 'mock-user-id';
     setLoading(true);
     console.log(mainFocus)
     console.log(activities)
@@ -221,8 +173,8 @@ const RegisterFlow = ({ route }: any) => {
       console.log('User details:', details);
 
       try {
-        await detailsApi.updateUserDetails(details);
-        console.log('User details saved:', details);
+        // Mock saving user details - no longer connecting to API
+        console.log('Mock: User details saved:', details);
       } catch (err) {
         alert('Failed to save user details. ' + getErrorMessage(err));
         return;
@@ -249,7 +201,8 @@ const RegisterFlow = ({ route }: any) => {
           date.setDate(today.getDate() - i);
           const dateStr = formatDateString(date);
           for (const activity of selectedActivities) {
-            await sessionApi.addTraining(dateStr, {
+            // Mock adding training sessions - no longer connecting to API
+            console.log('Mock: Added training session:', {
               tss: Math.round(ctlValue / selectedActivities.length),
               session_focus: "-2",
               completed: true,
@@ -265,10 +218,10 @@ const RegisterFlow = ({ route }: any) => {
         return;
       }
 
-      // Manually run the update training plan API request
+      // Mock running the training algorithm - no longer connecting to API
       try {
         const dateStr = getCurrentDateString();
-        await trainingApi.runTrainingAlgorithm(dateStr);
+        console.log('Mock: Training algorithm run for date:', dateStr);
       } catch (err) {
         console.log(err);
       }
@@ -415,7 +368,8 @@ const RegisterFlow = ({ route }: any) => {
                 }))}
                 onNext={handleNextStep}
                 onBack={async () => {
-                  await signOut();
+                  // Mock sign out - no longer connecting to AWS
+                  console.log('Mock: User signed out');
                   navigation.navigate('Login');
                 }}
                 isDarkMode={isDarkMode}

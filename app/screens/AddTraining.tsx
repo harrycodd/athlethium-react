@@ -2,8 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Platform, ScrollView, SafeAreaView, KeyboardAvoidingView, Keyboard, Modal } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fetchAuthSession } from 'aws-amplify/auth';
-import { sessionApi } from '../api_calls/sessionApi';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDarkMode } from '../../hooks/useDarkMode';
@@ -147,14 +145,10 @@ const AddTrainingScreen = () => {
         tss_type: 'estimated',
         completed,
       };
-      console.log('Request body:', body);
+      console.log('Training would be added:', body);
       
-      const date = body.date;
-      
-      // Use the new sessionApi to add training
-      console.log('[session] POST /session/add', body);
-      await sessionApi.addTraining(date, body);
-      console.log('Training added successfully');
+      // Simulate successful addition without API call
+      console.log('Training added successfully (local only)');
       navigation.goBack();
     } catch (err: any) {
       console.log('Error in handleAddTraining:', err);

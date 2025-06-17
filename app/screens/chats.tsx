@@ -3,18 +3,49 @@ import {
   View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, RefreshControl, ScrollView, Modal, SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { v4 as uuidv4 } from 'uuid';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { formatSecondsToHHMMSS, getCurrentDateString } from '../../utils/dateUtils';
-import { sessionApi } from '../api_calls/sessionApi';
-import { chatApi, type ChatMessage as ApiChatMessage, type ChatSession as ApiChatSession } from '../api_calls/chatApi';
+import { chatApi, sessionApi } from '../../utils/mockHelpers';
 import { validateParams, getErrorMessage } from '../../utils/stringUtils';
 import '../../global.css';
 
-type Message = ApiChatMessage;
+// Simple ID generator to replace uuid
+const generateId = (): string => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
+type Message = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: string;
+};
+
+type ChatSession = {
+  sessionId: string;
+  date: string;
+  firstMessage: string;
+  messageCount: number;
+  lastActivity: string;
+};
+
+type ApiChatSession = {
+  sessionId: string;
+  createdAt: string;
+  title?: string;
+  lastMessage?: string;
+  messageCount: number;
+  lastActivity: string;
+};
+
+type ApiChatMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+};
 
 type TrainingSuggestion = {
   name: string;
@@ -27,14 +58,6 @@ type TrainingSuggestion = {
   completed: boolean;
   date: string;
 } | null;
-
-type ChatSession = {
-  sessionId: string;
-  date: string;
-  firstMessage: string;
-  messageCount: number;
-  lastActivity: string;
-};
 
 const nextSuggested = {
   type: 'Swim',
@@ -64,7 +87,7 @@ const ChatScreen = () => {
   const [currentChatSession, setCurrentChatSession] = useState<string | null>(null);
 
   useEffect(() => {
-    const newSessionId = uuidv4();
+    const newSessionId = generateId();
     setSessionId(newSessionId);
     console.log('Chat session initialized with ID:', newSessionId);
 
@@ -99,7 +122,8 @@ const ChatScreen = () => {
     if (!userId) return;
     setLoadingHistory(true);
     try {
-      const response = await chatApi.getChatHistory();
+      // Get last 30 days of chat history with sessions enabled
+      const response = await chatApi.getMonthlyChatHistory();
       
       if (response.sessions && Array.isArray(response.sessions)) {
         // Map the API response to our ChatSession type
@@ -147,7 +171,7 @@ const ChatScreen = () => {
 
   // Start a new chat session
   const startNewChat = () => {
-    const newSessionId = uuidv4();
+    const newSessionId = generateId();
     setSessionId(newSessionId);
     setMessages([]);
     setCurrentChatSession(null);
@@ -608,7 +632,11 @@ const ChatScreen = () => {
               </View>
             ) : (
               <View className="flex-1">
-                {messages.map((item, index) => renderMessage({ item, index }))}
+                {messages.map((item, index) => (
+                  <View key={item.id || `message-${index}`}>
+                    {renderMessage({ item, index })}
+                  </View>
+                ))}
               </View>
             )}
           </View>

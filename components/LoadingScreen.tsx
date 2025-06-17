@@ -1,9 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, Dimensions, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { getCurrentUser } from 'aws-amplify/auth';
-import { detailsApi } from '../app/api_calls/detailsApi';
 
 const { width, height } = Dimensions.get('window');
 

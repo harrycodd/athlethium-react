@@ -7,7 +7,6 @@ export { CommonFab } from './ui/CommonFab';
 
 // Hooks
 export { useCommonHeader } from '../hooks/useCommonHeader';
-export { useApiCall } from '../hooks/useApiCall';
 export { useUserId } from '../hooks/useUserId';
 
 // Utils (re-export for convenience)

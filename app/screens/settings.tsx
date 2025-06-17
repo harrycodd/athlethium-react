@@ -8,13 +8,20 @@ import { DarkModeContext } from '../context/DarkModeContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { signOut, deleteUser, updateUserAttribute, type UpdateUserAttributeOutput, confirmUserAttribute, type ConfirmUserAttributeInput } from 'aws-amplify/auth';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { getContainerStyle, getTextStyle, getInputStyle, getButtonStyle, getCardStyle, getPlaceholderColor } from '../../utils/styles';
-import { detailsApi } from '../api_calls/detailsApi';
-import { trainingApi } from '../api_calls/trainingApi';
-import { makeAuthenticatedApiCall } from '../api_calls/apiUtils';
 import { getErrorMessage } from '../../utils/stringUtils';
+import { 
+  signOut, 
+  deleteUser, 
+  updateUserAttribute, 
+  confirmUserAttribute, 
+  detailsApi, 
+  trainingApi, 
+  makeAuthenticatedApiCall,
+  type UpdateUserAttributeOutput,
+  type ConfirmUserAttributeInput 
+} from '../../utils/mockHelpers';
 
 type MainFocusKey = 'swimming' | 'cycling' | 'running';
 
@@ -779,7 +786,7 @@ const SettingsScreen = () => {
                 </Text>
               </View>
               <MaterialIcons 
-                name={isGeneralCollapsed ? "chevron-right" : "chevron-left"} 
+                name={isGeneralCollapsed ? "chevron-right" : "keyboard-arrow-down"} 
                 size={24} 
                 color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
               />
@@ -971,7 +978,7 @@ const SettingsScreen = () => {
                 </Text>
               </View>
               <MaterialIcons 
-                name={isProfileCollapsed ? "chevron-right" : "chevron-left"} 
+                name={isProfileCollapsed ? "chevron-right" : "keyboard-arrow-down"} 
                 size={24} 
                 color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
               />
@@ -1131,7 +1138,7 @@ const SettingsScreen = () => {
                 </Text>
               </View>
               <MaterialIcons 
-                name={isSubscriptionCollapsed ? "chevron-right" : "chevron-left"} 
+                name={isSubscriptionCollapsed ? "chevron-right" : "keyboard-arrow-down"} 
                 size={24} 
                 color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
               />
@@ -1299,7 +1306,7 @@ const SettingsScreen = () => {
                 </Text>
               </View>
               <MaterialIcons 
-                name={isTrainingCollapsed ? "chevron-right" : "chevron-left"} 
+                name={isTrainingCollapsed ? "chevron-right" : "keyboard-arrow-down"} 
                 size={24} 
                 color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
               />
@@ -1555,7 +1562,7 @@ const SettingsScreen = () => {
                 </Text>
               </View>
               <MaterialIcons 
-                name={isTrainingScheduleCollapsed ? "chevron-right" : "chevron-left"} 
+                name={isTrainingScheduleCollapsed ? "chevron-right" : "keyboard-arrow-down"} 
                 size={24} 
                 color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
               />
@@ -1689,7 +1696,7 @@ const SettingsScreen = () => {
                 </Text>
               </View>
               <MaterialIcons 
-                name={isTrainingActionsCollapsed ? "chevron-right" : "chevron-left"} 
+                name={isTrainingActionsCollapsed ? "chevron-right" : "keyboard-arrow-down"} 
                 size={24} 
                 color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
               />
@@ -1756,7 +1763,7 @@ const SettingsScreen = () => {
                 </Text>
               </View>
               <MaterialIcons 
-                name={isApiIntegrationsCollapsed ? "chevron-right" : "chevron-left"} 
+                name={isApiIntegrationsCollapsed ? "chevron-right" : "keyboard-arrow-down"} 
                 size={24} 
                 color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
               />
@@ -1966,7 +1973,7 @@ const SettingsScreen = () => {
                 </Text>
               </View>
               <MaterialIcons 
-                name={isAccountSettingsCollapsed ? "chevron-right" : "chevron-left"} 
+                name={isAccountSettingsCollapsed ? "chevron-right" : "keyboard-arrow-down"} 
                 size={24} 
                 color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
               />

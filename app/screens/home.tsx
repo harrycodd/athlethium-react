@@ -5,8 +5,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { useUserId, CommonInput, getClassNames, getThemeColors } from '../../components';
 import { getCurrentDateString } from '../../utils/dateUtils';
-import { trainingApi } from '../api_calls/trainingApi';
-import { metricsApi } from '../api_calls/metricsApi';
 import { capitalizeFirst } from '../../utils/stringUtils';
 import { getFitnessLevelText, getFatigueLevelText, normalizeTrainingSession } from '../../utils/trainingUtils';
 import { Ionicons } from '@expo/vector-icons';
@@ -202,121 +200,44 @@ const HomeScreen = () => {
     { event_type: 'Yoga', name: 'Evening recovery', sport: 'Yoga', time: '30m', description: '', completed: false },
   ];
 
-  // Fetch metrics function
-  const fetchMetrics = async () => {
-    if (!userId) return;
-    setLoadingMetrics(true);
-    try {
-      const dateStr = getCurrentDateString();
-      console.log(`[metrics] Fetching metrics for userId=${userId}, date=${dateStr}`);
-      console.log('[metrics] GET /metrics/get');
-      const data = await metricsApi.getMetrics(dateStr);
-      console.log('[metrics] API response:', data);
-      if (data && typeof data === 'object') {
-        // Convert string values to numbers for sliders, with fallbacks
-        const physicalValue = (data as any).physicallyFeeling;
-        const mentalValue = (data as any).mentallyFeeling;
-        const sleepValue = (data as any).sleep;
-        
-        setMetrics({
-          physicallyFeeling: typeof physicalValue === 'string' ? 
-            (['Very Poor', 'Poor', 'Average', 'Good', 'Excellent'].indexOf(physicalValue) + 1 || 3) : 
-            (physicalValue || 3),
-          mentallyFeeling: typeof mentalValue === 'string' ? 
-            (['Very Poor', 'Poor', 'Average', 'Good', 'Excellent'].indexOf(mentalValue) + 1 || 3) : 
-            (mentalValue || 3),
-          sleep: typeof sleepValue === 'string' ? 
-            (['Very Poor', 'Poor', 'Average', 'Good', 'Excellent'].indexOf(sleepValue) + 1 || 3) : 
-            (sleepValue || 3),
-          weight: (data as any).weight ? String((data as any).weight) : '',
-          illness: (data as any).illness ?? 'None',
-          injury: (data as any).injury ?? 'None',
-        });
-        setTrainingMetrics({
-          ctl: (data as any).ctl ?? 0,
-          atl: (data as any).atl ?? 0,
-          form: ((data as any).ctl ?? 0) - ((data as any).atl ?? 0)
-        });
-      }
-      setError(null);
-    } catch (err) {
-      console.error('[metrics] Error fetching metrics:', err);
-      setError('Could not load metrics');
-    } finally {
-      setLoadingMetrics(false);
+  // Initialize with default data
+  useEffect(() => {
+    if (userId) {
+      setMetrics({
+        physicallyFeeling: 3,
+        mentallyFeeling: 3,
+        sleep: 3,
+        weight: '',
+        illness: 'None',
+        injury: 'None',
+      });
+      setTrainingMetrics({
+        ctl: 120,
+        atl: 95,
+        form: 25
+      });
+      setTodayTraining(defaultTrainingToday);
+      setLoading(false);
     }
-  };
-
-  // Fetch today's training function
-  const fetchTodaysTraining = async () => {
-    if (!userId) return;
-    setLoadingTraining(true);
-    try {
-      const dateStr = getCurrentDateString();
-      const data = await trainingApi.getUserTraining(dateStr);
-      if (Array.isArray(data)) {
-        setTodayTraining(data.map((session: any) => normalizeTrainingSession(session)));
-      } else {
-        setTodayTraining([]);
-      }
-      setError(null);
-    } catch (err) {
-      setTodayTraining([]);
-      setError('Could not load today\'s training');
-    } finally {
-      setLoadingTraining(false);
-    }
-  };
+  }, [userId]);
 
   // Handle refresh function
   const handleRefresh = async () => {
     if (!userId || refreshing) return;
     setRefreshing(true);
-    try {
-      await Promise.all([
-        fetchMetrics(),
-        fetchTodaysTraining()
-      ]);
-    } finally {
+    // Simulate refresh without API calls
+    setTimeout(() => {
       setRefreshing(false);
-    }
+    }, 1000);
   };
-
-  // Fetch data when userId is available
-  useEffect(() => {
-    if (userId) {
-      const loadInitialData = async () => {
-        setLoading(true);
-        try {
-          await Promise.all([
-            fetchMetrics(),
-            fetchTodaysTraining()
-          ]);
-        } finally {
-          setLoading(false);
-        }
-      };
-      loadInitialData();
-    }
-  }, [userId]);
 
   const saveMetrics = async () => {
     if (!userId) return;
     setLoadingMetrics(true);
     try {
-      const dateStr = getCurrentDateString();
-      const body = {
-        illness: metrics.illness,
-        injury: metrics.injury,
-        mentallyFeeling: metrics.mentallyFeeling,
-        physicallyFeeling: metrics.physicallyFeeling,
-        sleep: metrics.sleep,
-        weight: metrics.weight ? Number(metrics.weight) : 0
-      };
-      console.log('[metrics] PUT /metrics/update', body);
-      await metricsApi.updateMetrics(dateStr, body);
-      // Optionally, refresh metrics after update
+      // Simulate saving metrics locally without API call
       setMetrics({ ...metrics });
+      console.log('Metrics would be saved:', metrics);
     } catch (err) {
       console.error('[metrics] Error saving metrics:', err);
       setError('Could not save metrics');

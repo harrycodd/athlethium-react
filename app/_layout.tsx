@@ -2,9 +2,8 @@ import React, { useContext, useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme, ActivityIndicator, View, Text } from 'react-native';
+import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getCurrentUser } from 'aws-amplify/auth';
 
 import HomeScreen from './screens/home';
 import CalendarScreen from './screens/calendar';
@@ -17,11 +16,9 @@ import AddTrainingScreen from './screens/AddTraining';
 import AnalysisScreen from './screens/analysis';
 import SessionDetailsScreen from './screens/SessionDetails';
 import PaywallScreen from './screens/PaywallScreen';
-import LoadingScreen from '../components/LoadingScreen';
+import SimpleLoadingScreen from '../components/SimpleLoadingScreen';
 import { DarkModeContext } from './context/DarkModeContext';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
-import { configureAuth } from "./aws/cognito";
-import { useNavigation } from '@react-navigation/native'; 
 import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 
@@ -126,7 +123,7 @@ function AppWithSubscription() {
     console.log('Showing loading screen with auth check');
       
     return (
-      <LoadingScreen 
+      <SimpleLoadingScreen 
         message="Athlethium" 
         subtitle="AI-Powered Training Platform"
         statusText="Setting up your experience..."
@@ -184,7 +181,7 @@ export default function App() {
 
   // Configure Cognito when the component mounts
   useEffect(() => {
-    configureAuth();
+    // Authentication removed - direct access to app
   }, []);
 
   return (

@@ -5,14 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchAuthSession } from 'aws-amplify/auth';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { getFitnessLevelText, getFatigueLevelText } from '../../utils/trainingUtils';
-import { trainingApi } from '../api_calls/trainingApi';
-import { metricsApi } from '../api_calls/metricsApi';
-import { scheduleApi } from '../api_calls/scheduleApi';
 import '../../global.css';
 
 const screenWidth = Dimensions.get('window').width;
@@ -99,7 +95,7 @@ const CalendarScreen = () => {
   useEffect(() => {
     if (userId) {
       fetchTrainingForDate(selectedDate);
-      fetchDailyMetrics(selectedDate);
+      initializeDailyMetrics(selectedDate);
     }
   }, [userId, selectedDate]);
 
@@ -113,47 +109,27 @@ const CalendarScreen = () => {
     });
   }, [selectedDate, isDarkMode]);
 
-  // Fetch scheduled training hours for the selected day
+  // Initialize with default data when userId is available
   useEffect(() => {
-    const fetchScheduledHours = async () => {
-      if (!userId || !selectedDate) return;
-      try {
-        const data = await scheduleApi.getSchedule(selectedDate);
-        const avaliableHours = (typeof data === 'object' && data !== null && 'avaliableHours' in data && typeof data.avaliableHours === 'number') ? data.avaliableHours : 0;
-        setScheduledHours(avaliableHours.toString());
-      } catch (err) {
-        setScheduledHours('0');
-      }
-    };
-    fetchScheduledHours();
+    if (userId && selectedDate) {
+      setScheduledHours('2'); // Default scheduled hours
+      setError(null);
+    }
   }, [userId, selectedDate]);
 
-  // Fetch scheduled hours for each day in the visible month
-  const fetchMonthScheduledHours = async (year: string, month: string) => {
-    if (!userId) return;
-    
+  // Initialize month scheduled hours with default data
+  useEffect(() => {
+    if (!userId || !selectedDate) return;
+    const [year, month] = selectedDate.split('-');
     const lastDay = new Date(Number(year), Number(month), 0).getDate();
     const newScheduled: Record<string, string> = {};
     
     for (let day = 1; day <= lastDay; day++) {
       const dayStr = String(day).padStart(2, '0');
       const dateStr = `${year}-${month}-${dayStr}`;
-      try {
-        const data = await scheduleApi.getSchedule(dateStr);
-        const avaliableHours = (typeof data === 'object' && data !== null && 'avaliableHours' in data && typeof data.avaliableHours === 'number') ? data.avaliableHours : 0;
-        newScheduled[dateStr] = avaliableHours.toString();
-      } catch (err) {
-        newScheduled[dateStr] = '0';
-      }
+      newScheduled[dateStr] = Math.floor(Math.random() * 3 + 1).toString(); // Random 1-3 hours for demo
     }
     setMonthScheduledHours(newScheduled);
-  };
-
-  // Only load the selected month
-  useEffect(() => {
-    if (!userId || !selectedDate) return;
-    const [year, month] = selectedDate.split('-');
-    fetchMonthScheduledHours(year, month);
   }, [userId, selectedDate]);
 
   // Get user ID from AsyncStorage
@@ -176,34 +152,33 @@ const CalendarScreen = () => {
 
     setLoading(true);
     try {
-      const trainingData = await trainingApi.getUserTraining(date);
+      // Mock training data instead of API call
+      const mockTrainingData = [
+        {
+          id: '1',
+          name: 'Morning Run',
+          event_type: 'run',
+          sport: 'Running',
+          time: '01:00:00',
+          description: 'Easy recovery run',
+          duration: '1 hour',
+        },
+        {
+          id: '2',
+          name: 'Strength Training',
+          event_type: 'strength',
+          sport: 'Strength',
+          time: '00:45:00',
+          description: 'Upper body focus',
+          duration: '45 minutes',
+        }
+      ];
 
-      if (Array.isArray(trainingData) && trainingData.length > 0) {
-        const mappedSessions = trainingData.map((session: any) => ({
-          id: session.id || session.workoutId || '',
-          name: session.event_type && session.event_type !== 'training'
-            ? `${capitalizeFirst(session.event_type)}: ${session.name || ''}`
-            : session.name || '',
-          event_type: session.event_type || '',
-          sport: session.sport || '',
-          time: (typeof session.time === 'number')
-            ? new Date(session.time * 1000).toISOString().substr(11, 8)
-            : (typeof session.time === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(session.time))
-              ? session.time
-              : '00:00:00',
-          description: session.description || session.title || session.notes || '',
-          duration: session.duration || '',
-        }));
-        setCalendarData(prevData => ({
-          ...prevData,
-          [date]: mappedSessions
-        }));
-      } else {
-        setCalendarData(prevData => ({
-          ...prevData,
-          [date]: []
-        }));
-      }
+      setCalendarData(prevData => ({
+        ...prevData,
+        [date]: mockTrainingData
+      }));
+      
       setError(null);
     } catch (err: any) {
       setCalendarData(prevData => ({
@@ -216,58 +191,35 @@ const CalendarScreen = () => {
     }
   };
 
-  // Fetch daily metrics for a specific date
-  const fetchDailyMetrics = async (date: string) => {
+  // Initialize with mock daily metrics
+  const initializeDailyMetrics = async (date: string) => {
     if (!userId) return;
 
-    setMetricsLoading(true);
-    try {
-      const metricsData = await metricsApi.getMetrics(date) as any;
-
-      if (metricsData && typeof metricsData === 'object') {
-        // Convert string values to numbers for sliders, with fallbacks
-        const physicalValue = (metricsData as any).physicallyFeeling;
-        const mentalValue = (metricsData as any).mentallyFeeling;
-        const sleepValue = (metricsData as any).sleep;
-        
-        setDailyMetrics({
-          ctl: (metricsData as any).ctl ?? 0,
-          atl: (metricsData as any).atl ?? 0,
-          form: ((metricsData as any).ctl ?? 0) - ((metricsData as any).atl ?? 0),
-          physicallyFeeling: typeof physicalValue === 'string' ? 
-            (['Very Poor', 'Poor', 'Average', 'Good', 'Excellent'].indexOf(physicalValue) + 1 || 3) : 
-            (physicalValue || 3),
-          mentallyFeeling: typeof mentalValue === 'string' ? 
-            (['Very Poor', 'Poor', 'Average', 'Good', 'Excellent'].indexOf(mentalValue) + 1 || 3) : 
-            (mentalValue || 3),
-          sleep: typeof sleepValue === 'string' ? 
-            (['Very Poor', 'Poor', 'Average', 'Good', 'Excellent'].indexOf(sleepValue) + 1 || 3) : 
-            (sleepValue || 3),
-          weight: (metricsData as any).weight ? Number((metricsData as any).weight) : 0,
-          illness: (metricsData as any).illness ?? 'None',
-          injury: (metricsData as any).injury ?? 'None',
-        });
-      } else {
-        setDailyMetrics(null);
-      }
-    } catch (err: any) {
-      console.error('Error fetching daily metrics:', err);
-      setDailyMetrics(null);
-    } finally {
-      setMetricsLoading(false);
-    }
+    // Mock metrics data
+    const mockMetrics = {
+      ctl: 120,
+      atl: 95,
+      form: 25,
+      physicallyFeeling: 3,
+      mentallyFeeling: 4,
+      sleep: 3,
+      weight: 70,
+      illness: 'None',
+      injury: 'None',
+    };
+    
+    setDailyMetrics(mockMetrics);
   };
 
-  // Function to handle saving edited hours
+  // Function to handle saving edited hours (local only)
   const saveEditedHours = async () => {
     if (!userId || !selectedDate) return;
     try {
-      const body = { avaliableHours: parseFloat(editHours) || 0 };
-      await scheduleApi.updateSchedule(selectedDate, body);
+      console.log('Hours would be saved:', editHours);
       setScheduledHours((parseFloat(editHours) || 0).toString());
       setEditModalVisible(false);
     } catch (err) {
-      // handle error
+      console.error('Error saving hours:', err);
     }
   };
 
@@ -397,9 +349,8 @@ const CalendarScreen = () => {
     setRefreshing(true);
     try {
       await fetchTrainingForDate(selectedDate);
-      await fetchDailyMetrics(selectedDate);
-      const [year, month] = selectedDate.split('-');
-      await fetchMonthScheduledHours(year, month);
+      await initializeDailyMetrics(selectedDate);
+      // Month scheduled hours already initialized
     } catch (error) {
       console.error('Error refreshing data:', error);
     } finally {

@@ -11,10 +11,8 @@ import {
   Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { confirmSignIn, autoSignIn, signIn, getCurrentUser, fetchAuthSession, resendSignUpCode } from "aws-amplify/auth";
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { getContainerStyle, getInputStyle, getButtonStyle, getPlaceholderColor } from '../../utils/styles';
-import { detailsApi } from '../api_calls/detailsApi';
 import "../../global.css";
 
 const LoginScreen = () => {

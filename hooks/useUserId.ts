@@ -13,10 +13,12 @@ export const useUserId = () => {
         if (storedUserId) {
           setUserId(storedUserId);
         } else {
-          setError('User not authenticated');
+          // For demo purposes, set a default userId
+          setUserId('demo-user');
         }
       } catch (err) {
         setError('Error retrieving user information');
+        setUserId('demo-user'); // Fallback
       } finally {
         setLoading(false);
       }
