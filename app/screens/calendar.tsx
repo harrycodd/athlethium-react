@@ -1,3 +1,10 @@
+// ===============================================
+// CALENDAR SCREEN - TRAINING SCHEDULE & PLANNING
+// ===============================================
+// This screen displays a calendar view of training sessions,
+// allows scheduling and editing of workouts, and provides
+// daily metrics tracking and planning functionality.
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Modal, TextInput, Platform, ScrollView, RefreshControl } from 'react-native';
 import { Calendar } from 'react-native-calendars';
@@ -7,16 +14,25 @@ import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDarkMode } from '../../hooks/useDarkMode';
-import { getFitnessLevelText, getFatigueLevelText } from '../../utils/trainingUtils';
+import { useDarkMode } from '../hooks/commonHooks';
+import { getFitnessLevelText, getFatigueLevelText } from '../utils/commonUtils';
+import { getThemedStyles } from '../styling';
 import '../../global.css';
 
 const screenWidth = Dimensions.get('window').width;
+
+// ===============================================
+// UTILITY FUNCTIONS
+// ===============================================
 
 // Helper function to capitalize the first letter of a string
 function capitalizeFirst(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+// ===============================================
+// TYPE DEFINITIONS
+// ===============================================
 
 // Daily metrics interface
 interface DailyMetrics {
@@ -31,8 +47,18 @@ interface DailyMetrics {
   injury: string;
 }
 
+// ===============================================
+// MAIN CALENDAR COMPONENT
+// ===============================================
+
 const CalendarScreen = () => {
+  
+  // =====================================
+  // HOOKS & STATE MANAGEMENT
+  // =====================================
+  
   const { isDarkMode } = useDarkMode();
+  const styles = getThemedStyles(isDarkMode);
 
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [calendarData, setCalendarData] = useState<Record<string, any[]>>({});

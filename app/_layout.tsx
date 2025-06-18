@@ -1,3 +1,16 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════════════════════════╗
+ * ║                                  APP LAYOUT                                          ║
+ * ║                                                                                      ║
+ * ║ Main application layout with navigation setup, authentication flow,                 ║
+ * ║ and subscription management integration.                                             ║
+ * ╚══════════════════════════════════════════════════════════════════════════════════════╝
+ */
+
+// ============================================================================
+// IMPORTS
+// ============================================================================
+
 import React, { useContext, useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -5,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Screen Imports
 import HomeScreen from './screens/home';
 import CalendarScreen from './screens/calendar';
 import StatsScreen from './screens/stats';
@@ -15,16 +29,24 @@ import RegisterFlow from './screens/register';
 import AddTrainingScreen from './screens/AddTraining';
 import AnalysisScreen from './screens/analysis';
 import SessionDetailsScreen from './screens/SessionDetails';
-import PaywallScreen from './screens/PaywallScreen';
-import SimpleLoadingScreen from '../components/SimpleLoadingScreen';
+import LoadingScreen from './screens/LoadingScreen';
+
+// Context and Provider Imports
 import { DarkModeContext } from './context/DarkModeContext';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 
+// ============================================================================
+// NAVIGATION SETUP
+// ============================================================================
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+
+// ============================================================================
+// MAIN APP COMPONENT - TAB NAVIGATION
+// ============================================================================
 
 function MainApp() {
   const { darkMode } = useContext(DarkModeContext); // Use context for dark mode
@@ -88,9 +110,17 @@ function MainApp() {
   );
 }
 
+// ============================================================================
+// APP WITH SUBSCRIPTION - AUTHENTICATION & ROUTING LOGIC
+// ============================================================================
+
 // Component that handles subscription logic
 function AppWithSubscription() {
   console.log('AppWithSubscription component initialized');
+  
+  // -------------------------------------------------------------------------
+  // STATE MANAGEMENT
+  // -------------------------------------------------------------------------
   const { isSubscribed, isLoading: subscriptionLoading } = useSubscription();
   const [showLoadingScreen, setShowLoadingScreen] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -99,6 +129,9 @@ function AppWithSubscription() {
   const [darkMode, setDarkMode] = useState<'light' | 'dark' | 'system'>('system');
   const isDarkMode = darkMode === 'dark' || (darkMode === 'system' && systemColorScheme === 'dark');
 
+  // -------------------------------------------------------------------------
+  // DARK MODE INITIALIZATION
+  // -------------------------------------------------------------------------
   //dark mode context to provide dark mode setting across the app
   useEffect(() => {
     const fetchDarkModeSetting = async () => {
@@ -110,6 +143,9 @@ function AppWithSubscription() {
     fetchDarkModeSetting();
   }, []);
 
+  // -------------------------------------------------------------------------
+  // AUTHENTICATION HANDLERS
+  // -------------------------------------------------------------------------
   // Handle authentication check result from LoadingScreen
   const handleAuthCheck = (isAuthenticated: boolean, isRegistered: boolean) => {
     console.log('Auth check result:', { isAuthenticated, isRegistered });
@@ -118,21 +154,25 @@ function AppWithSubscription() {
     setShowLoadingScreen(false);
   };
 
+  // -------------------------------------------------------------------------
+  // LOADING SCREEN LOGIC
+  // -------------------------------------------------------------------------
   // Show loading screen initially
   if (showLoadingScreen) {
     console.log('Showing loading screen with auth check');
       
     return (
-      <SimpleLoadingScreen 
-        message="Athlethium" 
-        subtitle="AI-Powered Training Platform"
-        statusText="Setting up your experience..."
-        isDarkMode={isDarkMode}
-        onAuthCheck={handleAuthCheck}
+      <LoadingScreen 
+        onAuthCheck={handleAuthCheck} 
+        isDarkMode={isDarkMode} 
+        setDarkMode={setDarkMode} 
       />
     );
   }
 
+  // -------------------------------------------------------------------------
+  // ROUTE DETERMINATION
+  // -------------------------------------------------------------------------
   // Determine the initial route based on authentication status
   let initialRouteName = "Login"; // Default to login
   if (isAuthenticated && isRegistered) {
@@ -143,6 +183,9 @@ function AppWithSubscription() {
 
   console.log('Setting initial route to:', initialRouteName, { isAuthenticated, isRegistered });
 
+  // -------------------------------------------------------------------------
+  // NAVIGATION STACK SETUP
+  // -------------------------------------------------------------------------
   // After loading screen is dismissed, show the full navigation stack
   // The LoadingScreen will handle initial routing to the appropriate screen
   return (
@@ -154,11 +197,11 @@ function AppWithSubscription() {
         }} 
         initialRouteName={initialRouteName}
       >
-        {/* Authentication Screens */}
+        {/* ===== AUTHENTICATION SCREENS ===== */}
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="RegisterFlow" component={RegisterFlow} initialParams={{email: "", step: 3}} />
         
-        {/* Main App Screens */}
+        {/* ===== MAIN APP SCREENS ===== */}
         <Stack.Screen name="MainTabs" component={MainApp} />
         <Stack.Screen name="AddTraining" component={AddTrainingScreen} />
         <Stack.Screen name="analysis" component={AnalysisScreen} />
@@ -168,7 +211,14 @@ function AppWithSubscription() {
   );
 }
 
+// ============================================================================
+// MAIN APP COMPONENT - ROOT ENTRY POINT
+// ============================================================================
+
 export default function App() {
+  // -------------------------------------------------------------------------
+  // REVENUCAT CONFIGURATION
+  // -------------------------------------------------------------------------
   // Configure RevenueCat when the component mounts
   useEffect(() => {
     Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
@@ -179,11 +229,22 @@ export default function App() {
     }
   }, []);
 
+  // -------------------------------------------------------------------------
+  // COGNITO CONFIGURATION
+  // -------------------------------------------------------------------------
   // Configure Cognito when the component mounts
   useEffect(() => {
-    // Authentication removed - direct access to app
+    // Import and configure auth when app starts
+    import('./aws/cognito').then(({ configureAuth }) => {
+      configureAuth();
+    }).catch(error => {
+      console.error('Failed to configure auth:', error);
+    });
   }, []);
 
+  // -------------------------------------------------------------------------
+  // APP RENDER
+  // -------------------------------------------------------------------------
   return (
     <SubscriptionProvider>
       <AppWithSubscription />

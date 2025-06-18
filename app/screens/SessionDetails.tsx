@@ -1,3 +1,10 @@
+// ===============================================
+// SESSION DETAILS SCREEN - WORKOUT MANAGEMENT
+// ===============================================
+// This screen displays and allows editing of training session details,
+// including workout parameters, completion status, and session data.
+// Provides comprehensive session management and tracking capabilities.
+
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Platform, ScrollView, useColorScheme, SafeAreaView, KeyboardAvoidingView, Keyboard, TouchableWithoutFeedback, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -6,7 +13,12 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { DarkModeContext } from '../context/DarkModeContext';
 import { useContext } from 'react';
-import { sessionApi } from '../../utils/mockHelpers';
+import { sessionApi } from '../utils/mockHelpers';
+import { getThemedStyles } from '../styling';
+
+// ===============================================
+// TYPE DEFINITIONS
+// ===============================================
 
 // Training data interface to match API response
 interface TrainingData {
@@ -24,7 +36,16 @@ interface TrainingData {
   workout_file_url?: string;
 }
 
+// ===============================================
+// MAIN SESSION DETAILS COMPONENT
+// ===============================================
+
 const SessionDetailsScreen = () => {
+  
+  // =====================================
+  // HOOKS & NAVIGATION
+  // =====================================
+  
   const route = useRoute();
   const navigation = useNavigation();
   const { date, sessionId, viewOnly } = route.params as { date: string, sessionId: string, viewOnly?: boolean };

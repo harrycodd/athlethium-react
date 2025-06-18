@@ -1,3 +1,25 @@
+/*
+================================================================================
+                             SETTINGS SCREEN
+================================================================================
+This screen provides a comprehensive settings interface for the training app,
+allowing users to configure their profile, training preferences, notifications,
+and app behavior. The screen is organized into several main sections:
+
+- User Profile Settings (name, email, units, goals)
+- Training Configuration (schedule, activities, focus areas)
+- Notification Preferences (uploads, training reminders, chat)
+- App Settings (dark mode, integrations)
+- Account Management (subscription, sign out, delete account)
+
+The screen maintains local state for all settings and synchronizes with
+backend services as needed.
+================================================================================
+*/
+
+// =============================================================================
+//                                IMPORTS
+// =============================================================================
 import "../../global.css";
 import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, Switch, TextInput, TouchableOpacity, ScrollView, Modal, Platform, Image, Alert, Linking } from 'react-native';
@@ -8,9 +30,9 @@ import { DarkModeContext } from '../context/DarkModeContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDarkMode } from '../../hooks/useDarkMode';
-import { getContainerStyle, getTextStyle, getInputStyle, getButtonStyle, getCardStyle, getPlaceholderColor } from '../../utils/styles';
-import { getErrorMessage } from '../../utils/stringUtils';
+import { useDarkMode } from '../hooks/commonHooks';
+import { getContainerStyle, getTextStyle, getInputStyle, getButtonStyle, getCardStyle, getPlaceholderColor, getErrorMessage } from '../utils/commonUtils';
+import { getThemedStyles } from '../styling';
 import { 
   signOut, 
   deleteUser, 
@@ -21,15 +43,31 @@ import {
   makeAuthenticatedApiCall,
   type UpdateUserAttributeOutput,
   type ConfirmUserAttributeInput 
-} from '../../utils/mockHelpers';
+} from '../utils/mockHelpers';
 
+// =============================================================================
+//                                TYPES
+// =============================================================================
 type MainFocusKey = 'swimming' | 'cycling' | 'running';
 
+// =============================================================================
+//                            MAIN COMPONENT
+// =============================================================================
 const SettingsScreen = () => {
+  // -------------------------------------------------------------------------
+  //                          HOOKS & CONTEXT
+  // -------------------------------------------------------------------------
   const navigation: any = useNavigation();
   const insets = useSafeAreaInsets();
-  const { darkMode, setDarkMode, isDarkMode } = useDarkMode();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const { customerInfo, isSubscribed, isPremium, refreshSubscriptionStatus } = useSubscription();
+  
+  // Dark mode selection state
+  const [darkMode, setDarkMode] = useState<'light' | 'dark' | 'system'>(isDarkMode ? 'dark' : 'light');
+  
+  // -------------------------------------------------------------------------
+  //                      NOTIFICATION SETTINGS STATE
+  // -------------------------------------------------------------------------
   const [uploadNotif, setUploadNotif] = useState(true);
   const [dailyTrainingNotif, setDailyTrainingNotif] = useState(true);
   
@@ -37,6 +75,9 @@ const SettingsScreen = () => {
   const [chatHistoryEnabled, setChatHistoryEnabled] = useState(true);
   const [chatMemoryEnabled, setChatMemoryEnabled] = useState(true);
   
+  // -------------------------------------------------------------------------
+  //                      TRAINING SETTINGS STATE
+  // -------------------------------------------------------------------------
   const [schedule, setSchedule] = useState(Array(7).fill({ hours: '' }));
   const [expandedDayIndex, setExpandedDayIndex] = useState<number | null>(null);
   const [mainFocus, setMainFocus] = useState<Record<MainFocusKey, boolean>>({ swimming: false, cycling: false, running: false });
@@ -48,6 +89,10 @@ const SettingsScreen = () => {
     strength: true,
   });
   const [intervalType, setIntervalType] = useState('mix');
+  
+  // -------------------------------------------------------------------------
+  //                          MODAL & UI STATE
+  // -------------------------------------------------------------------------
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
@@ -58,6 +103,9 @@ const SettingsScreen = () => {
   const [emailVerificationCode, setEmailVerificationCode] = useState('');
   const [emailStep, setEmailStep] = useState(1);
 
+  // -------------------------------------------------------------------------
+  //                          USER DATA STATE
+  // -------------------------------------------------------------------------
   // Details state for user profile
   const [detailsLoading, setDetailsLoading] = useState(true);
   const [detailsError, setDetailsError] = useState<string | null>(null);
@@ -67,6 +115,9 @@ const SettingsScreen = () => {
   // Track previous details for change detection
   const [prevDetails, setPrevDetails] = useState<any>(null);
 
+  // -------------------------------------------------------------------------
+  //                          SAVE STATE MANAGEMENT
+  // -------------------------------------------------------------------------
   // Manual save state
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -99,6 +150,9 @@ const SettingsScreen = () => {
   const [wahooScheduledWorkouts, setWahooScheduledWorkouts] = useState(false);
 
   // Section collapse state - all sections collapsed by default
+  // -------------------------------------------------------------------------
+  //                          UI COLLAPSE STATE
+  // -------------------------------------------------------------------------
   const [isGeneralCollapsed, setIsGeneralCollapsed] = useState(true);
   const [isProfileCollapsed, setIsProfileCollapsed] = useState(true);
   const [isSubscriptionCollapsed, setIsSubscriptionCollapsed] = useState(true);
@@ -108,8 +162,14 @@ const SettingsScreen = () => {
   const [isApiIntegrationsCollapsed, setIsApiIntegrationsCollapsed] = useState(true);
   const [isAccountSettingsCollapsed, setIsAccountSettingsCollapsed] = useState(true);
 
+  // -------------------------------------------------------------------------
+  //                              CONSTANTS
+  // -------------------------------------------------------------------------
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+  // -------------------------------------------------------------------------
+  //                          MODAL HANDLERS
+  // -------------------------------------------------------------------------
   const openModal = (dayIndex: number) => {
     setSelectedDay(dayIndex);
     setIsModalVisible(true);
@@ -143,6 +203,9 @@ const SettingsScreen = () => {
     setEmailVerificationCode('');
   };
 
+  // -------------------------------------------------------------------------
+  //                        USER ATTRIBUTE HANDLERS
+  // -------------------------------------------------------------------------
   const handleChangeAttribute = async (attributeKey: string, value: string) => {
     try {
       const output = await updateUserAttribute({

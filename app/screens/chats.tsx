@@ -1,3 +1,10 @@
+// ===============================================
+// CHATS SCREEN - AI COACHING CONVERSATION
+// ===============================================
+// This screen handles AI coaching chat conversations,
+// session management, and training suggestions.
+// Provides an intuitive interface for user-AI interactions.
+
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, RefreshControl, ScrollView, Modal, SafeAreaView
@@ -6,16 +13,25 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDarkMode } from '../../hooks/useDarkMode';
-import { formatSecondsToHHMMSS, getCurrentDateString } from '../../utils/dateUtils';
-import { chatApi, sessionApi } from '../../utils/mockHelpers';
-import { validateParams, getErrorMessage } from '../../utils/stringUtils';
+import { useDarkMode } from '../hooks/commonHooks';
+import { getCurrentDateString, formatSecondsToHHMMSS } from '../utils/commonUtils';
+import { chatApi, sessionApi } from '../utils/mockHelpers';
+import { validateParams, getErrorMessage } from '../utils/commonUtils';
+import { getThemedStyles } from '../styling';
 import '../../global.css';
+
+// ===============================================
+// UTILITY FUNCTIONS
+// ===============================================
 
 // Simple ID generator to replace uuid
 const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
+
+// ===============================================
+// TYPE DEFINITIONS
+// ===============================================
 
 type Message = {
   id: string;

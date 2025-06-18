@@ -1,3 +1,25 @@
+/*
+================================================================================
+                           WORKOUT ANALYSIS SCREEN
+================================================================================
+This screen provides detailed analysis of workout data with interactive charts.
+Users can view heart rate data, power metrics, and other workout statistics
+through an interactive line chart interface. The screen supports:
+
+- Interactive line charts with gesture-based scrubbing
+- Real-time data point selection and highlighting
+- Dynamic chart grid and axis display
+- Workout data visualization with customizable metrics
+- Responsive chart layout that adapts to screen dimensions
+
+The chart implementation uses react-native-svg-charts with custom gesture
+handling for smooth user interaction and data exploration.
+================================================================================
+*/
+
+// =============================================================================
+//                                IMPORTS
+// =============================================================================
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -18,13 +40,20 @@ import * as shape from 'd3-shape';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useDarkMode } from '../../hooks/useDarkMode';
+import { useDarkMode } from '../hooks/commonHooks';
+import { getThemedStyles } from '../styling';
 import '../../global.css';
 
+// =============================================================================
+//                               CONSTANTS
+// =============================================================================
 const screenWidth = Dimensions.get('window').width;
 const CHART_WIDTH = screenWidth - 64;
 const CHART_HEIGHT = 220;
 
+// =============================================================================
+//                              SAMPLE DATA
+// =============================================================================
 // For demo purposes - in a real app, this would be fetched using the workoutId
 const sampleWorkoutData = {
   '123': [200, 220, 210, 250, 260, 280, 270, 300, 310, 330, 340, 320],
@@ -34,6 +63,9 @@ const sampleWorkoutData = {
 // Default data to use when no workout ID is provided or data not found
 const defaultData = [200, 220, 210, 250, 260, 280, 270, 300, 310, 330, 340, 320];
 
+// =============================================================================
+//                           CHART COMPONENTS
+// =============================================================================
 const CustomGrid = ({ x, y, ticks, belowChart = false }) => {
   return (
     <G>
@@ -52,10 +84,20 @@ const CustomGrid = ({ x, y, ticks, belowChart = false }) => {
   );
 };
 
+// =============================================================================
+//                            MAIN COMPONENT
+// =============================================================================
 const AnalysisScreen = () => {
+  // -------------------------------------------------------------------------
+  //                          HOOKS & NAVIGATION
+  // -------------------------------------------------------------------------
   const { workoutId } = useLocalSearchParams();
   const navigation = useNavigation();
   const { isDarkMode } = useDarkMode();
+  
+  // -------------------------------------------------------------------------
+  //                            COMPONENT STATE
+  // -------------------------------------------------------------------------
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<number[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -71,6 +113,9 @@ const AnalysisScreen = () => {
     distance: 0,
   });
 
+  // -------------------------------------------------------------------------
+  //                           DATA LOADING EFFECT
+  // -------------------------------------------------------------------------
   // Effect to load workout data based on ID
   useEffect(() => {
     const fetchWorkoutData = async () => {
@@ -97,6 +142,9 @@ const AnalysisScreen = () => {
     fetchWorkoutData();
   }, [workoutId]);
 
+  // -------------------------------------------------------------------------
+  //                           GESTURE HANDLERS
+  // -------------------------------------------------------------------------
   const handleGesture = (event: PanGestureHandlerGestureEvent) => {
     const x = event.nativeEvent.x;
     const idx = Math.floor((x / CHART_WIDTH) * data.length);
@@ -116,6 +164,9 @@ const AnalysisScreen = () => {
     setSelection({ start: null, end: null });
   };
 
+  // -------------------------------------------------------------------------
+  //                          DATA REFRESH HANDLER
+  // -------------------------------------------------------------------------
   const handleRefresh = async () => {
     setRefreshing(true);
     try {

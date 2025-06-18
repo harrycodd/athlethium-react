@@ -1,23 +1,42 @@
+// ===============================================
+// ADD TRAINING SCREEN - WORKOUT CREATION
+// ===============================================
+// This screen allows users to create and schedule new training sessions,
+// configure workout details, and manage training parameters.
+// Provides comprehensive form inputs for session customization.
+
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Platform, ScrollView, SafeAreaView, KeyboardAvoidingView, Keyboard, Modal } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useDarkMode } from '../../hooks/useDarkMode';
-import { useCommonHeader, useUserId, CommonCard, CommonButton, CommonPicker, CommonInput, getClassNames, getThemeColors } from '../../components';
+import { useDarkMode, useUserId } from '../hooks/commonHooks';
+import { getThemedStyles } from '../styling';
 import '../../global.css';
 
+// ===============================================
+// MAIN ADD TRAINING COMPONENT
+// ===============================================
+
 const AddTrainingScreen = () => {
+  
+  // =====================================
+  // HOOKS & NAVIGATION
+  // =====================================
+  
   const route = useRoute();
   const navigation = useNavigation();
   const { date } = route.params as { date: string };
   const { isDarkMode } = useDarkMode();
   const { userId } = useUserId();
-  const classNames = getClassNames(isDarkMode);
-  const themeColors = getThemeColors(isDarkMode);
+  const styles = getThemedStyles(isDarkMode);
   const insets = useSafeAreaInsets();
 
+  // =====================================
+  // STATE MANAGEMENT
+  // =====================================
+  
   const [name, setName] = useState('');
   const [sport, setSport] = useState('');
   const [eventType, setEventType] = useState('');

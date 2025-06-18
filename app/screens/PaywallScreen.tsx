@@ -1,3 +1,10 @@
+// ===============================================
+// PAYWALL SCREEN - SUBSCRIPTION MANAGEMENT
+// ===============================================
+// This screen handles subscription purchases, package selection,
+// and payment processing for premium features.
+// Provides a clean UI for subscription options and purchase flows.
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -11,19 +18,34 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useDarkMode } from '../../hooks/useDarkMode';
+import { useDarkMode } from '../hooks/commonHooks';
 import { useSubscription } from '../context/SubscriptionContext';
 import { PurchasesPackage } from 'react-native-purchases';
+import { getThemedStyles } from '../styling';
 import '../../global.css';
 
 const { width } = Dimensions.get('window');
+
+// ===============================================
+// TYPE DEFINITIONS
+// ===============================================
 
 interface PaywallScreenProps {
   onSubscriptionSuccess: () => void;
 }
 
+// ===============================================
+// MAIN PAYWALL COMPONENT
+// ===============================================
+
 const PaywallScreen: React.FC<PaywallScreenProps> = ({ onSubscriptionSuccess }) => {
+  
+  // =====================================
+  // HOOKS & STATE MANAGEMENT
+  // =====================================
+  
   const { isDarkMode } = useDarkMode();
+  const styles = getThemedStyles(isDarkMode);
   const { 
     offerings, 
     isLoading, 
@@ -36,6 +58,10 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ onSubscriptionSuccess }) 
   const [purchaseLoading, setPurchaseLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
 
+  // =====================================
+  // PACKAGE SELECTION LOGIC
+  // =====================================
+  
   // Auto-select monthly package by default
   useEffect(() => {
     if (offerings && offerings.length > 0 && offerings[0].availablePackages) {

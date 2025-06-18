@@ -1,26 +1,65 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * ================================================================================================
+ * COLORS CONSTANTS
+ * ================================================================================================
+ * Theme-aware color definitions for light and dark modes.
+ * These colors are used by the useThemeColor hook and themed components.
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
+// ================================================================================================
+// LIGHT THEME COLORS
+// ================================================================================================
+const lightColors = {
+  text: '#11181C',
+  background: '#FFFFFF',
+  tint: '#2563EB',
+  icon: '#687076',
+  tabIconDefault: '#687076',
+  tabIconSelected: '#2563EB',
+  border: '#E5E7EB',
+  card: '#FFFFFF',
+  primary: '#2563EB',
+  secondary: '#64748B',
+  accent: '#3B82F6',
+  surface: '#F8FAFC',
+  error: '#EF4444',
+  warning: '#F59E0B',
+  success: '#10B981',
+  info: '#06B6D4',
+  muted: '#64748B',
+  placeholder: '#9CA3AF',
 };
+
+// ================================================================================================
+// DARK THEME COLORS
+// ================================================================================================
+const darkColors = {
+  text: '#ECEDEE',
+  background: '#151718',
+  tint: '#60A5FA',
+  icon: '#9BA1A6',
+  tabIconDefault: '#9BA1A6',
+  tabIconSelected: '#60A5FA',
+  border: '#374151',
+  card: '#1F2937',
+  primary: '#60A5FA',
+  secondary: '#9CA3AF',
+  accent: '#3B82F6',
+  surface: '#111827',
+  error: '#F87171',
+  warning: '#FBBF24',
+  success: '#34D399',
+  info: '#22D3EE',
+  muted: '#9CA3AF',
+  placeholder: '#6B7280',
+};
+
+// ================================================================================================
+// COLORS EXPORT
+// ================================================================================================
+export const Colors = {
+  light: lightColors,
+  dark: darkColors,
+};
+
+export default Colors;

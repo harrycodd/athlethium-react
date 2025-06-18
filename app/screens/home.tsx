@@ -1,14 +1,24 @@
+// ===============================================
+// HOME SCREEN - MAIN TRAINING & FITNESS DASHBOARD
+// ===============================================
+// This is the main dashboard showing today's training,
+// fitness metrics, and daily check-in functionality.
+// Preserves all original UI/UX while adding clear code organization.
+
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, TextInput, Modal, RefreshControl, Animated, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useDarkMode } from '../../hooks/useDarkMode';
-import { useUserId, CommonInput, getClassNames, getThemeColors } from '../../components';
-import { getCurrentDateString } from '../../utils/dateUtils';
-import { capitalizeFirst } from '../../utils/stringUtils';
-import { getFitnessLevelText, getFatigueLevelText, normalizeTrainingSession } from '../../utils/trainingUtils';
+import { useDarkMode } from '../hooks/commonHooks';
+import { useUserId } from '../hooks/commonHooks';
+import { getCurrentDateString, capitalizeFirst, getFitnessLevelText, getFatigueLevelText, normalizeTrainingSession } from '../utils/commonUtils';
 import { Ionicons } from '@expo/vector-icons';
+import { getThemedStyles } from '../styling';
 import "../../global.css";
+
+// ===============================================
+// TYPE DEFINITIONS
+// ===============================================
 
 interface TrainingMetrics {
   ctl: number;
@@ -39,6 +49,10 @@ interface HealthMetrics {
   injury: string;
 }
 
+// ===============================================
+// CUSTOM UI COMPONENTS
+// ===============================================
+
 // Custom Dropdown Component
 const CustomDropdown = ({ 
   value, 
@@ -52,6 +66,7 @@ const CustomDropdown = ({
   isDarkMode: boolean;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const styles = getThemedStyles(isDarkMode);
   
   return (
     <View className="relative">
@@ -59,7 +74,7 @@ const CustomDropdown = ({
         onPress={() => setIsOpen(true)}
         className={`flex-row items-center justify-between p-0`}
       >
-        <Text className={`text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        <Text className={styles.text.body}>
           {value}
         </Text>
       </TouchableOpacity>
@@ -75,9 +90,9 @@ const CustomDropdown = ({
           activeOpacity={1}
           onPress={() => setIsOpen(false)}
         >
-          <View className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-t-3xl p-6`}>
+          <View className={`${styles.card.modal} rounded-t-3xl p-6`}>
             <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-4" />
-            <Text className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <Text className={`${styles.text.title} mb-4`}>
               Select Injury Status
             </Text>
             <View>
@@ -90,14 +105,14 @@ const CustomDropdown = ({
                   }}
                   className={`p-4 rounded-xl flex-row items-center justify-between mb-3 ${
                     value === option 
-                      ? isDarkMode ? 'bg-blue-600' : 'bg-blue-500'
-                      : isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                      ? styles.button.primary
+                      : styles.button.secondary
                   }`}
                 >
                   <Text className={`text-base font-medium ${
                     value === option 
                       ? 'text-white' 
-                      : isDarkMode ? 'text-white' : 'text-gray-900'
+                      : styles.text.body
                   }`}>
                     {option}
                   </Text>
@@ -109,9 +124,9 @@ const CustomDropdown = ({
             </View>
             <TouchableOpacity
               onPress={() => setIsOpen(false)}
-              className={`mt-6 p-4 rounded-xl ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'}`}
+              className={`mt-6 p-4 rounded-xl ${styles.button.secondary}`}
             >
-              <Text className={`text-center font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <Text className={`text-center font-medium ${styles.text.body}`}>
                 Cancel
               </Text>
             </TouchableOpacity>
@@ -164,13 +179,20 @@ const SimpleSlider = ({
   );
 };
 
+// ===============================================
+// MAIN HOME SCREEN COMPONENT
+// ===============================================
+
 const HomeScreen = () => {
+  // =====================================
+  // HOOKS & STATE MANAGEMENT
+  // =====================================
+  
   const { isDarkMode } = useDarkMode();
   const { userId } = useUserId();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const classNames = getClassNames(isDarkMode);
-  const themeColors = getThemeColors(isDarkMode);
+  const styles = getThemedStyles(isDarkMode);
   
   const [metrics, setMetrics] = useState<HealthMetrics>({
     physicallyFeeling: 3,
@@ -200,6 +222,10 @@ const HomeScreen = () => {
     { event_type: 'Yoga', name: 'Evening recovery', sport: 'Yoga', time: '30m', description: '', completed: false },
   ];
 
+  // =====================================
+  // DATA INITIALIZATION & EFFECTS
+  // =====================================
+
   // Initialize with default data
   useEffect(() => {
     if (userId) {
@@ -220,6 +246,10 @@ const HomeScreen = () => {
       setLoading(false);
     }
   }, [userId]);
+
+  // =====================================
+  // EVENT HANDLERS
+  // =====================================
 
   // Handle refresh function
   const handleRefresh = async () => {
@@ -246,22 +276,32 @@ const HomeScreen = () => {
     }
   };
 
+  // =====================================
+  // LOADING STATE HANDLING
+  // =====================================
+
   // Check if any data is still loading
   const isAnyDataLoading = loading || loadingMetrics || loadingTraining || refreshing;
 
   // Show single loading indicator while any data is loading
   if (isAnyDataLoading) {
     return (
-      <View className={`${classNames.container} flex-1 justify-center items-center`}>
-        <ActivityIndicator size="large" color={themeColors.primary} />
-        <Text className={`${classNames.textMuted} mt-4 text-center`}>
+      <View className={`${styles.layout.screenContainer} flex-1 justify-center items-center`}>
+        <ActivityIndicator size="large" color="#3B82F6" />
+        <Text className={`${styles.text.small} mt-4 text-center`}>
           {refreshing ? 'Refreshing...' : 'Loading...'}
         </Text>
       </View>
     );
-  }  return (
+  }
+
+  // =====================================
+  // MAIN RENDER
+  // =====================================
+
+  return (
     <View className={`${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} flex-1`}>
-      {/* Fixed Header */}
+      {/* ===== FIXED HEADER ===== */}
       <View
         style={{
           paddingTop: insets.top + 12,
@@ -295,9 +335,13 @@ const HomeScreen = () => {
         }
       >
         <View className="px-6" style={{ paddingTop: 24, paddingBottom: 24 }}>
-          {/* Fitness Metrics Cards */}
+          
+          {/* ==========================================
+              FITNESS METRICS SECTION
+              ========================================== */}
           <View className="mb-8">
             <View className="flex-row gap-4">
+              
               {/* Fitness Section */}
               <View className="flex-1">
                 <View className="flex-row items-center mb-4">
@@ -348,7 +392,9 @@ const HomeScreen = () => {
             </View>
           </View>
 
-        {/* Today's Activities */}
+        {/* ==========================================
+            TODAY'S ACTIVITIES SECTION
+            ========================================== */}
         <View className="mb-8">
           <View className="flex-row items-center mb-4">
             <View className={`p-2 rounded-lg mr-3 ${
@@ -415,9 +461,7 @@ const HomeScreen = () => {
                 return (
                   <TouchableOpacity 
                     key={index}
-                    className={`p-4 rounded-2xl border ${
-                      isDarkMode ? 'bg-gray-800/90 border-gray-700' : 'bg-white border-gray-200'
-                    }`}
+                    className={`${styles.card.listItem} border`}
                     style={{
                       shadowColor: '#000',
                       shadowOffset: { width: 0, height: 2 },
@@ -430,9 +474,7 @@ const HomeScreen = () => {
                     activeOpacity={0.7}
                   >
                     <View className="flex-row items-center justify-between mb-2">
-                      <Text className={`text-lg font-semibold ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}>
+                      <Text className={styles.text.title}>
                         {session.event_type ? capitalizeFirst(session.event_type) + (session.name ? `: ${session.name}` : '') : session.name}
                       </Text>
                       <View className={`px-3 py-1 rounded-full ${
@@ -454,9 +496,7 @@ const HomeScreen = () => {
                             size={14} 
                             color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
                           />
-                          <Text className={`text-sm ml-1 ${
-                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                          }`}>
+                          <Text className={`${styles.text.small} ml-1`}>
                             {capitalizeFirst(session.sport)}
                           </Text>
                         </View>
@@ -469,9 +509,7 @@ const HomeScreen = () => {
                             size={14} 
                             color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
                           />
-                          <Text className={`text-sm ml-1 ${
-                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                          }`}>
+                          <Text className={`${styles.text.small} ml-1`}>
                             {session.time}
                           </Text>
                         </View>
@@ -484,9 +522,7 @@ const HomeScreen = () => {
                             size={14} 
                             color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
                           />
-                          <Text className={`text-sm ml-1 ${
-                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                          }`}>
+                          <Text className={`${styles.text.small} ml-1`}>
                             {session.duration}
                           </Text>
                         </View>
@@ -495,9 +531,7 @@ const HomeScreen = () => {
 
                     {session.description && (
                       <Text 
-                        className={`text-sm leading-5 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                        }`}
+                        className={`${styles.text.small} leading-5`}
                         numberOfLines={2}
                         ellipsizeMode="tail"
                       >
@@ -509,9 +543,7 @@ const HomeScreen = () => {
               })}
               
               {todayTraining.length > 3 && (
-                <View className={`p-4 rounded-2xl border ${
-                  isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                }`}
+                <View className={`${styles.card.cardCompact} border`}
                 style={{
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
@@ -523,7 +555,7 @@ const HomeScreen = () => {
                     className="items-center py-2"
                     onPress={() => (navigation as any).navigate('Calendar')}
                   >
-                    <Text className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                    <Text className={`${styles.text.link} text-sm font-medium`}>
                       View {todayTraining.length - 3} more activities
                     </Text>
                     <Ionicons 
@@ -538,7 +570,9 @@ const HomeScreen = () => {
           )}
         </View>
 
-        {/* Daily Check-in */}
+        {/* ==========================================
+            DAILY CHECK-IN SECTION
+            ========================================== */}
         <View className="mb-8">
           <View className="flex-row items-center mb-4">
             <View className={`p-2 rounded-lg mr-3 ${
@@ -580,6 +614,7 @@ const HomeScreen = () => {
 
           {/* Weight and Injury Form Fields */}
           <View className="space-y-4">
+            
             {/* Weight Input */}
             <View>
               <Text className={`text-base font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>

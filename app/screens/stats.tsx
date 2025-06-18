@@ -1,3 +1,10 @@
+// ===============================================
+// STATS SCREEN - TRAINING METRICS & ANALYTICS
+// ===============================================
+// This screen displays training metrics charts,
+// performance analytics, and historical data visualization.
+// Preserves all original UI/UX while adding clear code organization.
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -18,8 +25,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useDarkMode } from '../../hooks/useDarkMode';
+import { useDarkMode } from '../hooks/commonHooks';
+import { getThemedStyles } from '../styling';
 import '../../global.css';
+
+// ===============================================
+// TYPE DEFINITIONS
+// ===============================================
 
 // TypeScript interfaces
 interface TrainingMetrics {
