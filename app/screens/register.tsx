@@ -1,3 +1,32 @@
+/*
+================================================================================
+                           REGISTRATION FLOW SCREEN
+================================================================================
+This screen provides a comprehensive multi-step registration flow for new users,
+guiding them through the complete setup of their training profile and preferences.
+
+The registration flow includes the following steps:
+- Target Sports Selection (step 3)
+- All Activities Selection (step 4) 
+- Weekly Schedule Configuration (step 5)
+- Name Entry (step 6)
+- Units Preference (step 7)
+- Notification Settings (step 8)
+- Interval Type Selection (step 9)
+- Appearance Theme Selection (step 10)
+- Chat Settings Configuration (step 11)
+- Schedule Days Ahead (step 12)
+- Partner Integration Setup (step 13)
+- Fitness Level & CTL Configuration (step 14)
+
+Each step maintains consistent UI/UX patterns matching the settings page,
+with proper state management and progress tracking throughout the flow.
+================================================================================
+*/
+
+// ============================================================================
+//                                IMPORTS
+// ============================================================================
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -57,13 +86,27 @@ const getInputStyle = (isDarkMode: boolean): string => {
     : 'w-full px-6 py-4 rounded-2xl bg-white/90 text-slate-800 border-2 border-gray-200/50 h-14 shadow-lg backdrop-blur-sm text-lg focus:border-blue-400';
 };
 
-const getButtonStyle = (isDarkMode: boolean, type: 'primary' | 'secondary' = 'primary'): string => {
+const getButtonStyle = (isDarkMode: boolean, type: 'primary' | 'secondary' | 'disabled' = 'primary'): string => {
   if (type === 'primary') {
-    return 'w-full py-5 rounded-xl items-center justify-center bg-blue-600 shadow-xl active:scale-95 transform transition-all duration-150 min-h-[60px] border-2 border-blue-500';
+    return 'w-full py-5 rounded-xl items-center justify-center bg-blue-600 shadow-xl min-h-[60px] border-2 border-blue-500';
+  } else if (type === 'disabled') {
+    return isDarkMode 
+      ? 'w-full py-5 rounded-xl items-center justify-center bg-gray-600 shadow-xl min-h-[60px] border-2 border-gray-500'
+      : 'w-full py-5 rounded-xl items-center justify-center bg-gray-400 shadow-xl min-h-[60px] border-2 border-gray-300';
   } else {
     return isDarkMode 
-      ? 'w-full py-4 rounded-xl items-center border border-gray-600 bg-gray-800 shadow-lg active:scale-95 transform transition-all duration-150'
-      : 'w-full py-4 rounded-xl items-center border border-gray-300 bg-white shadow-lg active:scale-95 transform transition-all duration-150';
+      ? 'w-full py-4 rounded-xl items-center border border-gray-600 bg-gray-800 shadow-lg'
+      : 'w-full py-4 rounded-xl items-center border border-gray-300 bg-white shadow-lg';
+  }
+};
+
+const getButtonTextStyle = (type: 'primary' | 'secondary' | 'disabled' = 'primary', isDarkMode: boolean = false): string => {
+  if (type === 'primary') {
+    return 'font-bold text-lg text-white drop-shadow-sm';
+  } else if (type === 'disabled') {
+    return isDarkMode ? 'font-bold text-lg text-gray-300' : 'font-bold text-lg text-gray-600';
+  } else {
+    return isDarkMode ? 'font-semibold text-base text-center text-slate-300' : 'font-semibold text-base text-center text-slate-700';
   }
 };
 
@@ -84,7 +127,7 @@ const getProgressPercentage = (currentStep: number): number => {
 // ============================================================================
 
 const getOptionButtonStyle = (isDarkMode: boolean, isSelected: boolean): string => {
-  const baseStyle = 'p-4 rounded-xl border-2 shadow-lg transform transition-all duration-200';
+  const baseStyle = 'p-4 rounded-xl border-2 shadow-lg';
   
   if (isSelected) {
     return isDarkMode
@@ -92,16 +135,16 @@ const getOptionButtonStyle = (isDarkMode: boolean, isSelected: boolean): string 
       : `${baseStyle} bg-blue-500 border-blue-300 scale-105 shadow-xl`;
   } else {
     return isDarkMode
-      ? `${baseStyle} bg-slate-700 border-slate-600 active:scale-95`
-      : `${baseStyle} bg-gray-100 border-gray-300 active:scale-95`;
+      ? `${baseStyle} bg-slate-700 border-slate-600`
+      : `${baseStyle} bg-gray-100 border-gray-300`;
   }
 };
 
 const getOptionButtonTextStyle = (isDarkMode: boolean, isSelected: boolean): string => {
   if (isSelected) {
-    return 'text-white';
+    return 'text-white font-semibold';
   } else {
-    return isDarkMode ? 'text-gray-300' : 'text-slate-800';
+    return isDarkMode ? 'text-gray-300 font-semibold' : 'text-slate-800 font-semibold';
   }
 };
 
@@ -123,9 +166,6 @@ interface TargetSportsStepProps {
   onNext: () => void;
   onBack: () => void;
   isDarkMode: boolean;
-  buttonClassName: string;
-  backButtonClassName: string;
-  backButtonTextClassName: string;
 }
 
 const TargetSportsStep: React.FC<TargetSportsStepProps> = ({
@@ -134,9 +174,6 @@ const TargetSportsStep: React.FC<TargetSportsStepProps> = ({
   onNext,
   onBack,
   isDarkMode,
-  buttonClassName,
-  backButtonClassName,
-  backButtonTextClassName,
 }) => {
   const canContinue = Object.values(mainFocus).some(Boolean);
   
@@ -163,15 +200,7 @@ const TargetSportsStep: React.FC<TargetSportsStepProps> = ({
             <TouchableOpacity
               key={focus}
               onPress={() => onMainFocusChange(focus)}
-              className={`flex-1 items-center justify-center rounded-2xl border-2 shadow-lg h-[120px] transform transition-all duration-200 ${
-                isSelected
-                  ? isDarkMode
-                    ? 'bg-blue-600 border-blue-400 scale-105 shadow-xl'
-                    : 'bg-blue-500 border-blue-300 scale-105 shadow-xl'
-                  : isDarkMode
-                  ? 'bg-slate-700 border-slate-600 active:scale-95'
-                  : 'bg-gray-100 border-gray-300 active:scale-95'
-              }`}
+              className={`flex-1 items-center justify-center h-[120px] ${getOptionButtonStyle(isDarkMode, isSelected)}`}
               style={{ elevation: isSelected ? 8 : 4 }}
             >
               <MaterialIcons
@@ -179,9 +208,7 @@ const TargetSportsStep: React.FC<TargetSportsStepProps> = ({
                 size={32}
                 color={getOptionButtonIconColor(isDarkMode, isSelected)}
               />
-              <Text
-                className={`mt-3 text-xs font-semibold text-center ${getOptionButtonTextStyle(isDarkMode, isSelected)}`}
-              >
+              <Text className={`mt-3 text-sm text-center ${getOptionButtonTextStyle(isDarkMode, isSelected)}`}>
                 {label}
               </Text>
             </TouchableOpacity>
@@ -191,18 +218,16 @@ const TargetSportsStep: React.FC<TargetSportsStepProps> = ({
       
       <View className="w-full space-y-4">
         <TouchableOpacity
-          className={canContinue 
-            ? 'w-full py-5 rounded-xl items-center justify-center bg-blue-600 shadow-xl min-h-[60px] border-2 border-blue-500'
-            : `w-full py-5 rounded-xl items-center justify-center shadow-xl min-h-[60px] border-2 ${isDarkMode ? 'bg-gray-600 border-gray-500' : 'bg-gray-400 border-gray-300'}`
-          }
+          className={canContinue ? getButtonStyle(isDarkMode, 'primary') : getButtonStyle(isDarkMode, 'disabled')}
           onPress={onNext}
           disabled={!canContinue}
+          style={{ elevation: 6 }}
         >
-          <Text className={`font-bold text-lg drop-shadow-sm ${canContinue ? 'text-white' : isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Continue</Text>
+          <Text className={canContinue ? getButtonTextStyle('primary') : getButtonTextStyle('disabled', isDarkMode)}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -216,9 +241,6 @@ interface AllActivitiesStepProps {
   onNext: () => void;
   onBack: () => void;
   isDarkMode: boolean;
-  buttonClassName: string;
-  backButtonClassName: string;
-  backButtonTextClassName: string;
 }
 
 const AllActivitiesStep: React.FC<AllActivitiesStepProps> = ({
@@ -228,10 +250,8 @@ const AllActivitiesStep: React.FC<AllActivitiesStepProps> = ({
   onNext,
   onBack,
   isDarkMode,
-  buttonClassName,
-  backButtonClassName,
-  backButtonTextClassName,
 }) => {
+    
   return (
     <View className="w-full items-center justify-center flex-1 px-6">
       <View className="mb-10">
@@ -258,15 +278,7 @@ const AllActivitiesStep: React.FC<AllActivitiesStepProps> = ({
               <TouchableOpacity
                 key={key}
                 onPress={() => !isDisabled && onActivitiesChange(key)}
-                className={`flex-1 items-center justify-center rounded-2xl border-2 shadow-lg h-[120px] transform transition-all duration-200 ${
-                  isSelected
-                    ? isDarkMode
-                      ? `bg-blue-600 border-blue-400 scale-105 shadow-xl ${isFromMainFocus ? 'ring-2 ring-yellow-400' : ''}`
-                      : `bg-blue-500 border-blue-300 scale-105 shadow-xl ${isFromMainFocus ? 'ring-2 ring-yellow-500' : ''}`
-                    : isDarkMode
-                    ? 'bg-slate-700 border-slate-600 active:scale-95'
-                    : 'bg-gray-100 border-gray-300 active:scale-95'
-                }`}
+                className={`flex-1 items-center justify-center h-[120px] ${getOptionButtonStyle(isDarkMode, isSelected)} ${isFromMainFocus ? (isDarkMode ? 'ring-2 ring-yellow-400' : 'ring-2 ring-yellow-500') : ''}`}
                 style={{ elevation: isSelected ? 8 : 4 }}
               >
                 {isFromMainFocus && (
@@ -280,7 +292,7 @@ const AllActivitiesStep: React.FC<AllActivitiesStepProps> = ({
                   color={getOptionButtonIconColor(isDarkMode, isSelected)}
                 />
                 <Text
-                  className={`mt-3 text-xs font-semibold text-center ${getOptionButtonTextStyle(isDarkMode, isSelected)}`}
+                  className={`mt-3 text-sm font-semibold text-center ${getOptionButtonTextStyle(isDarkMode, isSelected)}`}
                 >
                   {label}
                 </Text>
@@ -300,15 +312,7 @@ const AllActivitiesStep: React.FC<AllActivitiesStepProps> = ({
               <TouchableOpacity
                 key={key}
                 onPress={() => onActivitiesChange(key)}
-                className={`items-center justify-center rounded-2xl border-2 shadow-lg h-[120px] w-[45%] transform transition-all duration-200 ${
-                  isSelected
-                    ? isDarkMode
-                      ? 'bg-blue-600 border-blue-400 scale-105 shadow-xl'
-                      : 'bg-blue-500 border-blue-300 scale-105 shadow-xl'
-                    : isDarkMode
-                    ? 'bg-slate-700 border-slate-600 active:scale-95'
-                    : 'bg-gray-100 border-gray-300 active:scale-95'
-                }`}
+                className={`flex-1 items-center justify-center h-[120px] ${getOptionButtonStyle(isDarkMode, isSelected)}`}
                 style={{ elevation: isSelected ? 8 : 4 }}
               >
                 <MaterialIcons
@@ -317,7 +321,7 @@ const AllActivitiesStep: React.FC<AllActivitiesStepProps> = ({
                   color={getOptionButtonIconColor(isDarkMode, isSelected)}
                 />
                 <Text
-                  className={`mt-3 text-xs font-semibold text-center ${getOptionButtonTextStyle(isDarkMode, isSelected)}`}
+                  className={`mt-3 text-sm font-semibold text-center ${getOptionButtonTextStyle(isDarkMode, isSelected)}`}
                 >
                   {label}
                 </Text>
@@ -328,12 +332,12 @@ const AllActivitiesStep: React.FC<AllActivitiesStepProps> = ({
       </View>
       
       <View className="w-full space-y-4">
-        <TouchableOpacity className={`${buttonClassName}`} onPress={onNext} style={{ elevation: 6 }}>
-          <Text className="font-bold text-lg text-white drop-shadow-sm">Continue</Text>
+        <TouchableOpacity className={getButtonStyle(isDarkMode, 'primary')} onPress={onNext} style={{ elevation: 6 }}>
+          <Text className={getButtonTextStyle('primary')}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -348,9 +352,6 @@ interface WeeklyScheduleStepProps {
   onNext: () => void;
   onBack: () => void;
   isDarkMode: boolean;
-  buttonClassName: string;
-  backButtonClassName: string;
-  backButtonTextClassName: string;
 }
 
 const WeeklyScheduleStep: React.FC<WeeklyScheduleStepProps> = ({
@@ -361,9 +362,6 @@ const WeeklyScheduleStep: React.FC<WeeklyScheduleStepProps> = ({
   onNext,
   onBack,
   isDarkMode,
-  buttonClassName,
-  backButtonClassName,
-  backButtonTextClassName,
 }) => {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   
@@ -474,12 +472,12 @@ const WeeklyScheduleStep: React.FC<WeeklyScheduleStepProps> = ({
       </ScrollView>
       
       <View className="w-full px-6 space-y-4">
-        <TouchableOpacity className={buttonClassName} onPress={onNext} style={{ elevation: 6 }}>
-          <Text className="font-bold text-lg text-white drop-shadow-sm">Continue</Text>
+        <TouchableOpacity className={getButtonStyle(isDarkMode, 'primary')} onPress={onNext} style={{ elevation: 6 }}>
+          <Text className={getButtonTextStyle('primary')}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -492,9 +490,6 @@ interface NameStepProps {
   onNext: () => void;
   onBack: () => void;
   isDarkMode: boolean;
-  buttonClassName: string;
-  backButtonClassName: string;
-  backButtonTextClassName: string;
 }
 
 const NameStep: React.FC<NameStepProps> = ({
@@ -503,10 +498,8 @@ const NameStep: React.FC<NameStepProps> = ({
   onNext,
   onBack,
   isDarkMode,
-  buttonClassName,
-  backButtonClassName,
-  backButtonTextClassName,
 }) => {
+    
   return (
     <View className="w-full items-center justify-center flex-1 px-6">
       <View className="mb-10">
@@ -535,22 +528,16 @@ const NameStep: React.FC<NameStepProps> = ({
       
       <View className="w-full space-y-4">
         <TouchableOpacity
-          className={`w-full py-5 rounded-xl items-center justify-center shadow-xl active:scale-95 transform transition-all duration-150 min-h-[60px] border-2 ${
-            name.trim()
-              ? 'bg-blue-600 border-blue-500'
-              : isDarkMode
-              ? 'bg-gray-600 border-gray-500'
-              : 'bg-gray-400 border-gray-300'
-          }`}
+          className={name.trim() ? getButtonStyle(isDarkMode, 'primary') : getButtonStyle(isDarkMode, 'disabled')}
           onPress={onNext}
           disabled={!name.trim()}
           style={{ elevation: 6 }}
         >
-          <Text className="font-bold text-lg text-white drop-shadow-sm">Continue</Text>
+          <Text className={name.trim() ? getButtonTextStyle('primary') : getButtonTextStyle('disabled', isDarkMode)}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -563,9 +550,6 @@ interface UnitsStepProps {
   onNext: () => void;
   onBack: () => void;
   isDarkMode: boolean;
-  buttonClassName: string;
-  backButtonClassName: string;
-  backButtonTextClassName: string;
 }
 
 const UnitsStep: React.FC<UnitsStepProps> = ({
@@ -574,9 +558,6 @@ const UnitsStep: React.FC<UnitsStepProps> = ({
   onNext,
   onBack,
   isDarkMode,
-  buttonClassName,
-  backButtonClassName,
-  backButtonTextClassName,
 }) => {
   return (
     <View className="w-full items-center justify-center flex-1 px-6">
@@ -596,15 +577,7 @@ const UnitsStep: React.FC<UnitsStepProps> = ({
           return (
             <TouchableOpacity
               key={unit}
-              className={`flex-1 items-center justify-center rounded-2xl border-2 shadow-lg h-[120px] transform transition-all duration-200 ${
-                isSelected
-                  ? isDarkMode
-                    ? 'bg-blue-600 border-blue-400 scale-105 shadow-xl'
-                    : 'bg-blue-500 border-blue-300 scale-105 shadow-xl'
-                  : isDarkMode
-                  ? 'bg-slate-700 border-slate-600 active:scale-95'
-                  : 'bg-gray-100 border-gray-300 active:scale-95'
-              }`}
+              className={`flex-1 items-center justify-center h-[120px] ${getOptionButtonStyle(isDarkMode, isSelected)}`}
               onPress={() => onUnitsChange(unit as 'Metric' | 'Imperial')}
               style={{ elevation: isSelected ? 8 : 4 }}
             >
@@ -613,7 +586,7 @@ const UnitsStep: React.FC<UnitsStepProps> = ({
                 size={32}
                 color={getOptionButtonIconColor(isDarkMode, isSelected)}
               />
-              <Text className={`mt-3 text-xs font-semibold text-center ${getOptionButtonTextStyle(isDarkMode, isSelected)}`}>
+              <Text className={`mt-3 text-sm text-center ${getOptionButtonTextStyle(isDarkMode, isSelected)}`}>
                 {unit}
               </Text>
             </TouchableOpacity>
@@ -622,12 +595,12 @@ const UnitsStep: React.FC<UnitsStepProps> = ({
       </View>
       
       <View className="w-full space-y-4">
-        <TouchableOpacity className={buttonClassName} onPress={onNext} style={{ elevation: 3 }}>
-          <Text className="font-bold text-lg text-white drop-shadow-sm">Continue</Text>
+        <TouchableOpacity className={getButtonStyle(isDarkMode, 'primary')} onPress={onNext} style={{ elevation: 6 }}>
+          <Text className={getButtonTextStyle('primary')}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -642,9 +615,6 @@ interface NotificationsStepProps {
   onNext: () => void;
   onBack: () => void;
   isDarkMode: boolean;
-  buttonClassName: string;
-  backButtonClassName: string;
-  backButtonTextClassName: string;
 }
 
 const NotificationsStep: React.FC<NotificationsStepProps> = ({
@@ -655,10 +625,8 @@ const NotificationsStep: React.FC<NotificationsStepProps> = ({
   onNext,
   onBack,
   isDarkMode,
-  buttonClassName,
-  backButtonClassName,
-  backButtonTextClassName,
 }) => {
+    
   return (
     <View className="w-full items-center justify-center flex-1 px-6">
       <View className="mb-10">
@@ -679,27 +647,15 @@ const NotificationsStep: React.FC<NotificationsStepProps> = ({
             <TouchableOpacity
               key={label}
               onPress={setState}
-              className={`flex-1 items-center justify-center p-4 rounded-xl border shadow-md min-h-[100px] ${
-                state
-                  ? isDarkMode
-                    ? 'bg-blue-600 border-blue-500'
-                    : 'bg-blue-500 border-blue-400'
-                  : isDarkMode
-                  ? 'bg-slate-800 border-gray-600'
-                  : 'bg-slate-200 border-gray-300'
-              }`}
+              className={`flex-1 items-center justify-center min-h-[100px] ${getOptionButtonStyle(isDarkMode, state)}`}
               style={{ elevation: 3 }}
             >
               <MaterialIcons
                 name={icon as any}
                 size={24}
-                color={state ? '#FFFFFF' : isDarkMode ? '#9CA3AF' : '#1E293B'}
+                color={getOptionButtonIconColor(isDarkMode, state)}
               />
-              <Text
-                className={`mt-2 text-sm font-medium text-center ${
-                  state ? 'text-white' : isDarkMode ? 'text-gray-400' : 'text-slate-800'
-                }`}
-              >
+              <Text className={`mt-2 text-sm text-center ${getOptionButtonTextStyle(isDarkMode, state)}`}>
                 {label}
               </Text>
             </TouchableOpacity>
@@ -708,12 +664,12 @@ const NotificationsStep: React.FC<NotificationsStepProps> = ({
       </View>
       
       <View className="w-full space-y-4">
-        <TouchableOpacity className={buttonClassName} onPress={onNext} style={{ elevation: 6 }}>
-          <Text className="font-bold text-lg text-white drop-shadow-sm">Continue</Text>
+        <TouchableOpacity className={getButtonStyle(isDarkMode, 'primary')} onPress={onNext} style={{ elevation: 6 }}>
+          <Text className={getButtonTextStyle('primary')}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -726,9 +682,6 @@ interface IntervalTypeStepProps {
   onNext: () => void;
   onBack: () => void;
   isDarkMode: boolean;
-  buttonClassName: string;
-  backButtonClassName: string;
-  backButtonTextClassName: string;
 }
 
 const IntervalTypeStep: React.FC<IntervalTypeStepProps> = ({
@@ -737,10 +690,8 @@ const IntervalTypeStep: React.FC<IntervalTypeStepProps> = ({
   onNext,
   onBack,
   isDarkMode,
-  buttonClassName,
-  backButtonClassName,
-  backButtonTextClassName,
 }) => {
+    
   return (
     <View className="w-full items-center justify-center flex-1 px-6">
       <View className="mb-10">
@@ -753,7 +704,7 @@ const IntervalTypeStep: React.FC<IntervalTypeStepProps> = ({
       </View>
       
       <View className="w-full mb-12">
-        <View className="flex-row flex-wrap justify-between items-start gap-3">
+        <View className="flex-row justify-between items-center gap-3">
           {[
             { type: 'mix', icon: 'shuffle', label: 'Mix' },
             { type: 'structured', icon: 'grid-on', label: 'Structured' },
@@ -762,69 +713,45 @@ const IntervalTypeStep: React.FC<IntervalTypeStepProps> = ({
             <TouchableOpacity
               key={type}
               onPress={() => onIntervalTypeChange(type)}
-              className={`items-center justify-center p-4 rounded-xl border shadow-md min-h-[100px] w-[30%] mb-3 ${
-                intervalType === type
-                  ? isDarkMode
-                    ? 'bg-blue-600 border-blue-500'
-                    : 'bg-blue-500 border-blue-400'
-                  : isDarkMode
-                  ? 'bg-slate-800 border-gray-600'
-                  : 'bg-slate-200 border-gray-300'
-              }`}
+              className={`flex-1 items-center justify-center min-h-[100px] ${getOptionButtonStyle(isDarkMode, intervalType === type)}`}
               style={{ elevation: 3 }}
             >
               <MaterialIcons
                 name={icon as any}
                 size={24}
-                color={intervalType === type ? '#FFFFFF' : isDarkMode ? '#9CA3AF' : '#1E293B'}
+                color={getOptionButtonIconColor(isDarkMode, intervalType === type)}
               />
-              <Text
-                className={`mt-2 text-xs font-medium text-center leading-tight ${
-                  intervalType === type ? 'text-white' : isDarkMode ? 'text-gray-400' : 'text-slate-800'
-                }`}
-              >
+              <Text className={`mt-2 text-sm text-center ${getOptionButtonTextStyle(isDarkMode, intervalType === type)}`}>
                 {label}
               </Text>
             </TouchableOpacity>
           ))}
-          <View className="w-full flex-row justify-center gap-3">
-            <TouchableOpacity
-              onPress={() => onIntervalTypeChange('none')}
-              className={`items-center justify-center p-4 rounded-xl border shadow-md min-h-[100px] w-[30%] ${
-                intervalType === 'none'
-                  ? isDarkMode
-                    ? 'bg-blue-600 border-blue-500'
-                    : 'bg-blue-500 border-blue-400'
-                  : isDarkMode
-                  ? 'bg-slate-800 border-gray-600'
-                  : 'bg-slate-200 border-gray-300'
-              }`}
-              style={{ elevation: 3 }}
-            >
-              <MaterialIcons
-                name="block"
-                size={24}
-                color={intervalType === 'none' ? '#FFFFFF' : isDarkMode ? '#9CA3AF' : '#1E293B'}
-              />
-              <Text
-                className={`mt-2 text-sm font-medium text-center leading-tight ${
-                  intervalType === 'none' ? 'text-white' : isDarkMode ? 'text-gray-400' : 'text-slate-800'
-                }`}
-              >
-                None
-              </Text>
-            </TouchableOpacity>
-          </View>
+        </View>
+        <View className="w-full flex-row justify-center gap-3 mt-3">
+          <TouchableOpacity
+            onPress={() => onIntervalTypeChange('none')}
+            className={`w-full items-center justify-center min-h-[100px] ${getOptionButtonStyle(isDarkMode, intervalType === 'none')}`}
+            style={{ elevation: 3 }}
+          >
+            <MaterialIcons
+              name="block"
+              size={24}
+              color={getOptionButtonIconColor(isDarkMode, intervalType === 'none')}
+            />
+            <Text className={`mt-2 text-sm text-center ${getOptionButtonTextStyle(isDarkMode, intervalType === 'none')}`}>
+              None
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
       
       <View className="w-full space-y-4">
-        <TouchableOpacity className={`${buttonClassName}`} onPress={onNext} style={{ elevation: 6 }}>
-          <Text className="font-bold text-lg text-white drop-shadow-sm">Continue</Text>
+        <TouchableOpacity className={getButtonStyle(isDarkMode, 'primary')} onPress={onNext} style={{ elevation: 6 }}>
+          <Text className={getButtonTextStyle('primary')}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -842,9 +769,6 @@ interface FitnessStepProps {
   onBack: () => void;
   loading: boolean;
   isDarkMode: boolean;
-  buttonClassName: string;
-  backButtonClassName: string;
-  backButtonTextClassName: string;
 }
 
 const FitnessStep: React.FC<FitnessStepProps> = ({
@@ -858,10 +782,8 @@ const FitnessStep: React.FC<FitnessStepProps> = ({
   onBack,
   loading,
   isDarkMode,
-  buttonClassName,
-  backButtonClassName,
-  backButtonTextClassName,
 }) => {
+    
   return (
     <View className="w-full items-center justify-center flex-1 px-6">
       <View className="mb-10">
@@ -893,7 +815,7 @@ const FitnessStep: React.FC<FitnessStepProps> = ({
               size={32}
               color={getOptionButtonIconColor(isDarkMode, fitnessMode === 'level')}
             />
-            <Text className={`mt-3 text-xs font-semibold text-center ${getOptionButtonTextStyle(isDarkMode, fitnessMode === 'level')}`}>
+            <Text className={`mt-3 text-sm font-semibold text-center ${getOptionButtonTextStyle(isDarkMode, fitnessMode === 'level')}`}>
               Level
             </Text>
           </TouchableOpacity>
@@ -916,7 +838,7 @@ const FitnessStep: React.FC<FitnessStepProps> = ({
               size={32}
               color={getOptionButtonIconColor(isDarkMode, fitnessMode === 'ctl')}
             />
-            <Text className={`mt-3 text-xs font-semibold text-center ${getOptionButtonTextStyle(isDarkMode, fitnessMode === 'ctl')}`}>
+            <Text className={`mt-3 text-sm font-semibold text-center ${getOptionButtonTextStyle(isDarkMode, fitnessMode === 'ctl')}`}>
               CTL
             </Text>
           </TouchableOpacity>
@@ -958,7 +880,7 @@ const FitnessStep: React.FC<FitnessStepProps> = ({
       
       <View className="w-full space-y-4">
         <TouchableOpacity
-          className={`${buttonClassName} ${loading ? 'opacity-75' : ''}`}
+          className={`${getButtonStyle(isDarkMode, 'primary')} ${loading ? 'opacity-75' : ''}`}
           onPress={onFinish}
           disabled={loading}
           style={{ elevation: 6 }}
@@ -966,12 +888,12 @@ const FitnessStep: React.FC<FitnessStepProps> = ({
           {loading ? (
             <ActivityIndicator color="white" size="small" />
           ) : (
-            <Text className="font-bold text-lg text-white drop-shadow-sm">Complete Registration</Text>
+            <Text className={getButtonTextStyle('primary')}>Complete Registration</Text>
           )}
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -986,18 +908,12 @@ interface PartnerIntegrationStepProps {
   onNext: () => void;
   onBack: () => void;
   isDarkMode: boolean;
-  buttonClassName: string;
-  backButtonClassName: string;
-  backButtonTextClassName: string;
 }
 
 const PartnerIntegrationStep: React.FC<PartnerIntegrationStepProps> = ({
   onNext,
   onBack,
   isDarkMode,
-  buttonClassName,
-  backButtonClassName,
-  backButtonTextClassName,
 }) => {
   const handleConnectStrava = () => {
     Alert.alert('Strava Integration', 'Strava integration coming soon!');
@@ -1127,12 +1043,12 @@ const PartnerIntegrationStep: React.FC<PartnerIntegrationStepProps> = ({
       </ScrollView>
       
       <View className="w-full space-y-4">
-        <TouchableOpacity className={buttonClassName} onPress={onNext} style={{ elevation: 6 }}>
-          <Text className="font-bold text-lg text-white drop-shadow-sm">Continue</Text>
+        <TouchableOpacity className={getButtonStyle(isDarkMode, 'primary')} onPress={onNext} style={{ elevation: 6 }}>
+          <Text className={getButtonTextStyle('primary')}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -1266,22 +1182,19 @@ const ChatSettingsStep: React.FC<ChatSettingsStepProps> = ({
   onNext,
   onBack,
 }) => {
-  const buttonClassName = isDarkMode 
-    ? 'bg-blue-600 py-4 rounded-xl shadow-lg border border-blue-500 items-center hover:bg-blue-700 active:bg-blue-800'
-    : 'bg-blue-500 py-4 rounded-xl shadow-lg items-center hover:bg-blue-600 active:bg-blue-700';
 
   return (
-    <View className="flex-1 px-6 py-8 justify-between">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <Text className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+    <View className="w-full items-center justify-center flex-1 px-6">
+      <View className="mb-10">
+        <Text className={`text-3xl font-bold mb-3 text-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
           Chat Settings
         </Text>
-        
-        <Text className={`text-base mb-8 leading-6 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+        <Text className={`text-lg mb-2 text-center leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
           Configure how the AI Coach works for you
         </Text>
+      </View>
 
-        <View className="flex-row justify-between items-center gap-3">
+      <View className="flex-row justify-between items-center gap-3 mb-12 w-full">
           {[
             { label: 'Chat History', state: chatHistory, setState: onChatHistoryChange, icon: 'history' },
             { label: 'Chat Memory', state: chatMemory, setState: onChatMemoryChange, icon: 'memory' },
@@ -1289,41 +1202,28 @@ const ChatSettingsStep: React.FC<ChatSettingsStepProps> = ({
             <TouchableOpacity
               key={label}
               onPress={() => setState(!state)}
-              className={`flex-1 items-center justify-center p-4 rounded-xl border shadow-md min-h-[100px] ${
-                state
-                  ? isDarkMode
-                    ? 'bg-blue-600 border-blue-500'
-                    : 'bg-blue-500 border-blue-400'
-                  : isDarkMode
-                  ? 'bg-slate-800 border-gray-600'
-                  : 'bg-slate-200 border-gray-300'
-              }`}
+              className={`flex-1 items-center justify-center min-h-[100px] ${getOptionButtonStyle(isDarkMode, state)}`}
               style={{ elevation: 3 }}
             >
               <MaterialIcons
                 name={icon as any}
                 size={24}
-                color={state ? '#FFFFFF' : isDarkMode ? '#9CA3AF' : '#1E293B'}
+                color={getOptionButtonIconColor(isDarkMode, state)}
               />
-              <Text
-                className={`mt-2 text-sm font-medium text-center ${
-                  state ? 'text-white' : isDarkMode ? 'text-gray-400' : 'text-slate-800'
-                }`}
-              >
+              <Text className={`mt-2 text-sm text-center ${getOptionButtonTextStyle(isDarkMode, state)}`}>
                 {label}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
-      </ScrollView>
       
       <View className="w-full space-y-4">
-        <TouchableOpacity className={buttonClassName} onPress={onNext} style={{ elevation: 6 }}>
-          <Text className="font-bold text-lg text-white drop-shadow-sm">Continue</Text>
+        <TouchableOpacity className={getButtonStyle(isDarkMode, 'primary')} onPress={onNext} style={{ elevation: 6 }}>
+          <Text className={getButtonTextStyle('primary')}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -1349,21 +1249,19 @@ const AppearanceStep: React.FC<AppearanceStepProps> = ({
   onNext,
   onBack,
 }) => {
-  const buttonClassName = isDarkMode 
-    ? 'bg-blue-600 py-4 rounded-xl shadow-lg border border-blue-500 items-center hover:bg-blue-700 active:bg-blue-800'
-    : 'bg-blue-500 py-4 rounded-xl shadow-lg items-center hover:bg-blue-600 active:bg-blue-700';
 
   return (
-    <View className="flex-1 px-6 py-8 justify-between">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <Text className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+    <View className="w-full items-center justify-center flex-1 px-6">
+      <View className="mb-10">
+        <Text className={`text-3xl font-bold mb-3 text-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
           Appearance
         </Text>
-        
-        <Text className={`text-base mb-8 leading-6 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+        <Text className={`text-lg mb-2 text-center leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
           Select your preferred theme
         </Text>
-
+      </View>
+      
+      <View className="w-full mb-12">
         <View className="flex-row justify-between items-center gap-3">
           {[
             { mode: 'light', icon: 'wb-sunny', label: 'Light' },
@@ -1373,41 +1271,29 @@ const AppearanceStep: React.FC<AppearanceStepProps> = ({
             <TouchableOpacity
               key={mode}
               onPress={() => onDarkModePreferenceChange(mode as 'light' | 'dark' | 'system')}
-              className={`flex-1 items-center justify-center p-4 rounded-xl border shadow-md min-h-[100px] ${
-                darkModePreference === mode
-                  ? isDarkMode
-                    ? 'bg-blue-600 border-blue-500'
-                    : 'bg-blue-500 border-blue-400'
-                  : isDarkMode
-                  ? 'bg-slate-800 border-gray-600'
-                  : 'bg-slate-200 border-gray-300'
-              }`}
+              className={`flex-1 items-center justify-center min-h-[100px] ${getOptionButtonStyle(isDarkMode, darkModePreference === mode)}`}
               style={{ elevation: 3 }}
             >
               <MaterialIcons
                 name={icon as any}
                 size={24}
-                color={darkModePreference === mode ? '#FFFFFF' : isDarkMode ? '#9CA3AF' : '#1E293B'}
+                color={getOptionButtonIconColor(isDarkMode, darkModePreference === mode)}
               />
-              <Text
-                className={`mt-2 text-sm font-medium text-center ${
-                  darkModePreference === mode ? 'text-white' : isDarkMode ? 'text-gray-400' : 'text-slate-800'
-                }`}
-              >
+              <Text className={`mt-2 text-sm text-center ${getOptionButtonTextStyle(isDarkMode, darkModePreference === mode)}`}>
                 {label}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
-      </ScrollView>
+      </View>
       
       <View className="w-full space-y-4">
-        <TouchableOpacity className={buttonClassName} onPress={onNext} style={{ elevation: 6 }}>
-          <Text className="font-bold text-lg text-white drop-shadow-sm">Continue</Text>
+        <TouchableOpacity className={getButtonStyle(isDarkMode, 'primary')} onPress={onNext} style={{ elevation: 6 }}>
+          <Text className={getButtonTextStyle('primary')}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -1433,52 +1319,40 @@ const ScheduleDaysAheadStep: React.FC<ScheduleDaysAheadStepProps> = ({
   onNext,
   onBack,
 }) => {
-  const buttonClassName = isDarkMode 
-    ? 'bg-blue-600 py-4 rounded-xl shadow-lg border border-blue-500 items-center hover:bg-blue-700 active:bg-blue-800'
-    : 'bg-blue-500 py-4 rounded-xl shadow-lg items-center hover:bg-blue-600 active:bg-blue-700';
 
   return (
-    <View className="flex-1 px-6 py-8 justify-between">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <Text className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+    <View className="w-full items-center justify-center flex-1 px-6">
+      <View className="mb-10">
+        <Text className={`text-3xl font-bold mb-3 text-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
           Schedule Days Ahead
         </Text>
-        
-        <Text className={`text-base mb-8 leading-6 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-          Choose how many days ahead to schedule your training.
+        <Text className={`text-lg mb-2 text-center leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          Choose how many days ahead to schedule your training
         </Text>
-
+      </View>
+      
+      <View className="w-full mb-12">
         <View className="flex-row gap-4">
           {[1, 3, 5].map((days) => (
             <TouchableOpacity
               key={days}
-              className={`flex-1 items-center justify-center p-4 rounded-xl border shadow-md min-h-[100px] ${
-                daysAhead === days
-                  ? isDarkMode
-                    ? 'bg-blue-600 border-blue-500'
-                    : 'bg-blue-500 border-blue-400'
-                  : isDarkMode
-                  ? 'bg-slate-800 border-gray-600'
-                  : 'bg-slate-200 border-gray-300'
-              }`}
+              className={`flex-1 items-center justify-center min-h-[100px] ${getOptionButtonStyle(isDarkMode, daysAhead === days)}`}
               style={{ elevation: 3 }}
               onPress={() => onDaysAheadChange(days)}
             >
-              <Text className={`text-sm font-medium text-center ${
-                daysAhead === days ? 'text-white' : isDarkMode ? 'text-gray-400' : 'text-slate-800'
-              }`}>{days} Day{days > 1 ? 's' : ''}</Text>
+              <Text className={`mt-2 text-sm text-center ${getOptionButtonTextStyle(isDarkMode, daysAhead === days)}`}>{days} Day{days > 1 ? 's' : ''}</Text>
             </TouchableOpacity>
           ))}
         </View>
-      </ScrollView>
+      </View>
       
       <View className="w-full space-y-4">
-        <TouchableOpacity className={buttonClassName} onPress={onNext} style={{ elevation: 6 }}>
-          <Text className="font-bold text-lg text-white drop-shadow-sm">Continue</Text>
+        <TouchableOpacity className={getButtonStyle(isDarkMode, 'primary')} onPress={onNext} style={{ elevation: 6 }}>
+          <Text className={getButtonTextStyle('primary')}>Continue</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={onBack} className="py-3 items-center">
-          <Text className={`font-semibold text-base text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Back</Text>
+          <Text className={getButtonTextStyle('secondary', isDarkMode)}>Back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -1486,7 +1360,13 @@ const ScheduleDaysAheadStep: React.FC<ScheduleDaysAheadStepProps> = ({
 };
 
 const RegisterFlow = ({ route }: any) => {
-  const navigation = useNavigation<any>();
+  let navigation: any = null;
+  try {
+    navigation = useNavigation<any>();
+  } catch (error) {
+    console.warn('Navigation context not available:', error);
+  }
+  
   const { isDarkMode } = useDarkMode();
   // Get email and step from route params (from login page or auto-login)
   const initialEmail = route?.params?.email || '';
@@ -1553,17 +1433,21 @@ const RegisterFlow = ({ route }: any) => {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
+      if (navigation) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      }
     } catch (error) {
       console.error('Error signing out:', error);
       // Even if logout fails, navigate to login
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
+      if (navigation) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      }
     }
   };
 
@@ -1699,9 +1583,6 @@ const RegisterFlow = ({ route }: any) => {
                 onNext={handleNextStep}
                 onBack={handleLogout}
                 isDarkMode={isDarkMode}
-                buttonClassName={getButtonStyle(isDarkMode, 'primary')}
-                backButtonClassName="mt-4"
-                backButtonTextClassName={`font-semibold text-base ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}
               />
             )}
             {step === 4 && (
@@ -1712,9 +1593,6 @@ const RegisterFlow = ({ route }: any) => {
                 onNext={handleNextStep}
                 onBack={handlePreviousStep}
                 isDarkMode={isDarkMode}
-                buttonClassName={getButtonStyle(isDarkMode, 'primary')}
-                backButtonClassName="mt-4"
-                backButtonTextClassName={`font-semibold text-base ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}
               />
             )}
             {step === 5 && (
@@ -1730,9 +1608,6 @@ const RegisterFlow = ({ route }: any) => {
                 onNext={handleNextStep}
                 onBack={handlePreviousStep}
                 isDarkMode={isDarkMode}
-                buttonClassName={getButtonStyle(isDarkMode, 'primary')}
-                backButtonClassName="mt-4"
-                backButtonTextClassName={`font-semibold text-base ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}
               />
             )}
             {step === 6 && (
@@ -1742,9 +1617,6 @@ const RegisterFlow = ({ route }: any) => {
                 onNext={handleNextStep}
                 onBack={handlePreviousStep}
                 isDarkMode={isDarkMode}
-                buttonClassName={getButtonStyle(isDarkMode, 'primary')}
-                backButtonClassName="mt-4"
-                backButtonTextClassName={`font-semibold text-base ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}
               />
             )}
             {step === 7 && (
@@ -1754,9 +1626,6 @@ const RegisterFlow = ({ route }: any) => {
                 onNext={handleNextStep}
                 onBack={handlePreviousStep}
                 isDarkMode={isDarkMode}
-                buttonClassName={getButtonStyle(isDarkMode, 'primary')}
-                backButtonClassName="mt-4"
-                backButtonTextClassName={`font-semibold text-base ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}
               />
             )}
             {step === 8 && (
@@ -1768,9 +1637,6 @@ const RegisterFlow = ({ route }: any) => {
                 onNext={handleNextStep}
                 onBack={handlePreviousStep}
                 isDarkMode={isDarkMode}
-                buttonClassName={getButtonStyle(isDarkMode, 'primary')}
-                backButtonClassName="mt-4"
-                backButtonTextClassName={`font-semibold text-base ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}
               />
             )}
             {step === 9 && (
@@ -1780,26 +1646,23 @@ const RegisterFlow = ({ route }: any) => {
                 onNext={handleNextStep}
                 onBack={handlePreviousStep}
                 isDarkMode={isDarkMode}
-                buttonClassName={getButtonStyle(isDarkMode, 'primary')}
-                backButtonClassName="mt-4"
-                backButtonTextClassName={`font-semibold text-base ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}
               />
             )}
             {step === 10 && (
-              <ChatSettingsStep
-                chatHistory={chatHistoryEnabled}
-                onChatHistoryChange={setChatHistoryEnabled}
-                chatMemory={chatMemoryEnabled}
-                onChatMemoryChange={setChatMemoryEnabled}
+              <AppearanceStep
+                darkModePreference={darkModePreference}
+                onDarkModePreferenceChange={setDarkModePreference}
                 onNext={handleNextStep}
                 onBack={handlePreviousStep}
                 isDarkMode={isDarkMode}
               />
             )}
             {step === 11 && (
-              <AppearanceStep
-                darkModePreference={darkModePreference}
-                onDarkModePreferenceChange={setDarkModePreference}
+              <ChatSettingsStep
+                chatHistory={chatHistoryEnabled}
+                onChatHistoryChange={setChatHistoryEnabled}
+                chatMemory={chatMemoryEnabled}
+                onChatMemoryChange={setChatMemoryEnabled}
                 onNext={handleNextStep}
                 onBack={handlePreviousStep}
                 isDarkMode={isDarkMode}
@@ -1819,9 +1682,6 @@ const RegisterFlow = ({ route }: any) => {
                 onNext={handleNextStep}
                 onBack={handlePreviousStep}
                 isDarkMode={isDarkMode}
-                buttonClassName={getButtonStyle(isDarkMode, 'primary')}
-                backButtonClassName="mt-4"
-                backButtonTextClassName={`font-semibold text-base ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}
               />
             )}
             {step === 14 && (
@@ -1836,9 +1696,6 @@ const RegisterFlow = ({ route }: any) => {
                 onBack={handlePreviousStep}
                 loading={loading}
                 isDarkMode={isDarkMode}
-                buttonClassName={getButtonStyle(isDarkMode, 'primary')}
-                backButtonClassName="mt-4"
-                backButtonTextClassName={`font-semibold text-base ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}
               />
             )}
           </View>
