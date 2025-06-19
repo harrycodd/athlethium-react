@@ -8,6 +8,13 @@
  */
 
 // ============================================================================
+// EARLY CONFIGURATION IMPORTS
+// ============================================================================
+
+// Configure Reanimated to suppress strict mode warnings
+import './config/reanimatedConfig';
+
+// ============================================================================
 // IMPORTS
 // ============================================================================
 
@@ -32,10 +39,13 @@ import SessionDetailsScreen from './screens/SessionDetails';
 import LoadingScreen from './screens/LoadingScreen';
 
 // Context and Provider Imports
-import { DarkModeContext } from './context/DarkModeContext';
+import { DarkModeProvider, DarkModeContext } from './context/DarkModeContext';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
+
+// Hook Imports
+// (Removed useReanimatedConfig import as it's now handled by direct import)
 
 // ============================================================================
 // NAVIGATION SETUP
@@ -49,9 +59,7 @@ const Stack = createStackNavigator();
 // ============================================================================
 
 function MainApp() {
-  const { darkMode } = useContext(DarkModeContext); // Use context for dark mode
-  const systemColorScheme = useColorScheme();
-  const isDarkMode = darkMode === 'dark' || (darkMode === 'system' && systemColorScheme === 'dark');
+  const { isDarkMode } = useContext(DarkModeContext); // Use context for dark mode
   const backgroundColor = isDarkMode ? '#0F172A' : '#F1F5F9'; // Changed to match chat screen background
 
   return (
@@ -125,23 +133,7 @@ function AppWithSubscription() {
   const [showLoadingScreen, setShowLoadingScreen] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isRegistered, setIsRegistered] = useState<boolean | null>(null);
-  const systemColorScheme = useColorScheme();
-  const [darkMode, setDarkMode] = useState<'light' | 'dark' | 'system'>('system');
-  const isDarkMode = darkMode === 'dark' || (darkMode === 'system' && systemColorScheme === 'dark');
-
-  // -------------------------------------------------------------------------
-  // DARK MODE INITIALIZATION
-  // -------------------------------------------------------------------------
-  //dark mode context to provide dark mode setting across the app
-  useEffect(() => {
-    const fetchDarkModeSetting = async () => {
-      const storedMode = await AsyncStorage.getItem('darkMode');
-      if (storedMode) {
-        setDarkMode(storedMode as 'light' | 'dark' | 'system');
-      }
-    };
-    fetchDarkModeSetting();
-  }, []);
+  const { isDarkMode } = useContext(DarkModeContext);
 
   // -------------------------------------------------------------------------
   // AUTHENTICATION HANDLERS
@@ -165,7 +157,6 @@ function AppWithSubscription() {
       <LoadingScreen 
         onAuthCheck={handleAuthCheck} 
         isDarkMode={isDarkMode} 
-        setDarkMode={setDarkMode} 
       />
     );
   }
@@ -189,25 +180,23 @@ function AppWithSubscription() {
   // After loading screen is dismissed, show the full navigation stack
   // The LoadingScreen will handle initial routing to the appropriate screen
   return (
-    <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
-      <Stack.Navigator 
-        screenOptions={{ 
-          headerShown: false,
-          gestureEnabled: false, // Disable swipe to go back gesture
-        }} 
-        initialRouteName={initialRouteName}
-      >
-        {/* ===== AUTHENTICATION SCREENS ===== */}
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="RegisterFlow" component={RegisterFlow} initialParams={{email: "", step: 3}} />
-        
-        {/* ===== MAIN APP SCREENS ===== */}
-        <Stack.Screen name="MainTabs" component={MainApp} />
-        <Stack.Screen name="AddTraining" component={AddTrainingScreen} />
-        <Stack.Screen name="analysis" component={AnalysisScreen} />
-        <Stack.Screen name="SessionDetails" component={SessionDetailsScreen} />
-      </Stack.Navigator>
-    </DarkModeContext.Provider>
+    <Stack.Navigator 
+      screenOptions={{ 
+        headerShown: false,
+        gestureEnabled: false, // Disable swipe to go back gesture
+      }} 
+      initialRouteName={initialRouteName}
+    >
+      {/* ===== AUTHENTICATION SCREENS ===== */}
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="RegisterFlow" component={RegisterFlow} initialParams={{email: "", step: 3}} />
+      
+      {/* ===== MAIN APP SCREENS ===== */}
+      <Stack.Screen name="MainTabs" component={MainApp} />
+      <Stack.Screen name="AddTraining" component={AddTrainingScreen} />
+      <Stack.Screen name="analysis" component={AnalysisScreen} />
+      <Stack.Screen name="SessionDetails" component={SessionDetailsScreen} />
+    </Stack.Navigator>
   );
 }
 
@@ -247,7 +236,9 @@ export default function App() {
   // -------------------------------------------------------------------------
   return (
     <SubscriptionProvider>
-      <AppWithSubscription />
+      <DarkModeProvider>
+        <AppWithSubscription />
+      </DarkModeProvider>
     </SubscriptionProvider>
   );
 }

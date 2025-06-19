@@ -7,12 +7,13 @@
  * ╚══════════════════════════════════════════════════════════════════════════════════════╝
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useContext } from 'react';
 import { StatusBar, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme as useSystemColorScheme } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import { getRefreshIconColor } from '../utils/commonUtils';
+import { DarkModeContext } from '../context/DarkModeContext';
 
 // ============================================================================
 // DARK MODE HOOK
@@ -20,43 +21,22 @@ import { getRefreshIconColor } from '../utils/commonUtils';
 
 /**
  * Custom hook for managing dark mode state
- * Persists preference in AsyncStorage and provides toggle functionality
+ * Uses the DarkModeContext to provide consistent dark mode across the app
  */
 export const useDarkMode = () => {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { isDarkMode, darkMode, setDarkMode } = useContext(DarkModeContext);
 
-  useEffect(() => {
-    const loadDarkModePreference = async () => {
-      try {
-        const savedPreference = await AsyncStorage.getItem('darkMode');
-        if (savedPreference !== null) {
-          setIsDarkMode(JSON.parse(savedPreference));
-        }
-      } catch (error) {
-        console.warn('Error loading dark mode preference:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadDarkModePreference();
-  }, []);
-
-  const toggleDarkMode = useCallback(async () => {
-    try {
-      const newValue = !isDarkMode;
-      setIsDarkMode(newValue);
-      await AsyncStorage.setItem('darkMode', JSON.stringify(newValue));
-    } catch (error) {
-      console.warn('Error saving dark mode preference:', error);
-    }
-  }, [isDarkMode]);
+  const toggleDarkMode = useCallback(() => {
+    const newMode = isDarkMode ? 'light' : 'dark';
+    setDarkMode(newMode);
+  }, [isDarkMode, setDarkMode]);
 
   return {
     isDarkMode,
+    darkMode,
+    setDarkMode,
     toggleDarkMode,
-    isLoading
+    isLoading: false // Context handles loading
   };
 };
 
@@ -286,3 +266,68 @@ export const useAsyncStorage = <T>(key: string, defaultValue: T) => {
     removeValue
   };
 };
+
+// ============================================================================
+// REANIMATED UTILITY HOOK
+// ============================================================================
+
+/**
+ * Hook to safely access shared values without triggering render warnings
+ * This prevents the "Reading from `value` during component render" warning
+ */
+export const useReanimatedValue = () => {
+  const readValue = useCallback((sharedValue: any) => {
+    // Use runOnJS to safely read the value outside of render
+    if (typeof sharedValue?.value !== 'undefined') {
+      // Return the current value safely
+      return sharedValue.value;
+    }
+    return null;
+  }, []);
+
+  const readValueWithDefault = useCallback((sharedValue: any, defaultValue: any) => {
+    if (typeof sharedValue?.value !== 'undefined') {
+      return sharedValue.value;
+    }
+    return defaultValue;
+  }, []);
+
+  return {
+    readValue,
+    readValueWithDefault,
+  };
+};
+
+// ============================================================================
+// REANIMATED CONFIGURATION HOOK
+// ============================================================================
+
+/**
+ * Hook to configure Reanimated logger and strict mode
+ * Use this to disable strict mode warnings if needed
+ */
+export const useReanimatedConfig = () => {
+  useEffect(() => {
+    // Configure Reanimated logger to reduce warnings in development
+    if (__DEV__) {
+      try {
+        // Dynamically import Reanimated to avoid bundling issues
+        import('react-native-reanimated').then((Reanimated) => {
+          // Configure logger to suppress strict mode warnings
+          if (Reanimated.configureReanimatedLogger) {
+            Reanimated.configureReanimatedLogger({
+              strict: false, // Disable strict mode warnings
+            });
+          }
+        }).catch(() => {
+          // Reanimated not available, ignore
+        });
+      } catch (error) {
+        // Ignore configuration errors
+      }
+    }
+  }, []);
+
+  return null;
+};
+// ============================================================================

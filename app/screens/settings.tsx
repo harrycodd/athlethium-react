@@ -59,11 +59,8 @@ const SettingsScreen = () => {
   // -------------------------------------------------------------------------
   const navigation: any = useNavigation();
   const insets = useSafeAreaInsets();
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { isDarkMode, darkMode, setDarkMode } = useDarkMode();
   const { customerInfo, isSubscribed, isPremium, refreshSubscriptionStatus } = useSubscription();
-  
-  // Dark mode selection state
-  const [darkMode, setDarkMode] = useState<'light' | 'dark' | 'system'>(isDarkMode ? 'dark' : 'light');
   
   // -------------------------------------------------------------------------
   //                      NOTIFICATION SETTINGS STATE
@@ -160,6 +157,7 @@ const SettingsScreen = () => {
   const [isTrainingScheduleCollapsed, setIsTrainingScheduleCollapsed] = useState(true);
   const [isTrainingActionsCollapsed, setIsTrainingActionsCollapsed] = useState(true);
   const [isApiIntegrationsCollapsed, setIsApiIntegrationsCollapsed] = useState(true);
+  const [isAppSettingsCollapsed, setIsAppSettingsCollapsed] = useState(true);
   const [isAccountSettingsCollapsed, setIsAccountSettingsCollapsed] = useState(true);
 
   // -------------------------------------------------------------------------
@@ -274,7 +272,6 @@ const SettingsScreen = () => {
 
   const handleDarkModeChange = async (mode: 'light' | 'dark' | 'system') => {
     setDarkMode(mode);
-    await AsyncStorage.setItem('darkMode', mode);
   };
 
   const handleSignOut = async () => {
@@ -2012,6 +2009,83 @@ const SettingsScreen = () => {
               </TouchableOpacity>
             </View>
               </>
+            )}
+          </View>
+
+          {/* App Settings Section */}
+          <View className="mb-4">
+            <TouchableOpacity 
+              className="flex-row items-center justify-between mb-4"
+              onPress={() => setIsAppSettingsCollapsed(!isAppSettingsCollapsed)}
+            >
+              <View className="flex-row items-center">
+                <View className={`p-2 rounded-lg mr-3 ${
+                  isDarkMode ? 'bg-indigo-500/20' : 'bg-indigo-50'
+                }`}>
+                  <MaterialIcons 
+                    name="settings-applications" 
+                    size={20} 
+                    color={isDarkMode ? '#6366F1' : '#4F46E5'} 
+                  />
+                </View>
+                <Text className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  App Settings
+                </Text>
+              </View>
+              <MaterialIcons 
+                name={isAppSettingsCollapsed ? "chevron-right" : "keyboard-arrow-down"} 
+                size={24} 
+                color={isDarkMode ? '#9CA3AF' : '#6B7280'} 
+              />
+            </TouchableOpacity>
+
+            {!isAppSettingsCollapsed && (
+              <View className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-5 border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} shadow-sm`}>
+                {/* Dark Mode Settings */}
+                <View className="mb-4">
+                  <Text className={`text-base font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Appearance
+                  </Text>
+                  <Text className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Choose your preferred app appearance theme
+                  </Text>
+                  <View className="flex-row gap-3">
+                    {[
+                      { mode: 'light', icon: 'light-mode', label: 'Light' },
+                      { mode: 'dark', icon: 'dark-mode', label: 'Dark' },
+                      { mode: 'system', icon: 'brightness-auto', label: 'System' },
+                    ].map(({ mode, icon, label }) => (
+                      <TouchableOpacity
+                        key={mode}
+                        onPress={() => handleDarkModeChange(mode as 'light' | 'dark' | 'system')}
+                        className={`flex-1 items-center justify-center p-4 rounded-xl border shadow-md min-h-[100px] ${
+                          darkMode === mode
+                            ? isDarkMode
+                              ? 'bg-blue-600 border-blue-500'
+                              : 'bg-blue-500 border-blue-400'
+                            : isDarkMode
+                            ? 'bg-slate-800 border-gray-600'
+                            : 'bg-slate-200 border-gray-300'
+                        }`}
+                        style={{ elevation: 3 }}
+                      >
+                        <MaterialIcons
+                          name={icon as any}
+                          size={24}
+                          color={darkMode === mode ? '#FFFFFF' : isDarkMode ? '#9CA3AF' : '#1E293B'}
+                        />
+                        <Text
+                          className={`mt-2 text-sm font-medium text-center ${
+                            darkMode === mode ? 'text-white' : isDarkMode ? 'text-gray-400' : 'text-slate-800'
+                          }`}
+                        >
+                          {label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
             )}
           </View>
 

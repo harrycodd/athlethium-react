@@ -169,7 +169,6 @@ const LoginScreen = () => {
           
           const signUpResult = await signUp({
             username: email.toLowerCase(),
-            password: Math.random().toString(36), // Random password for passwordless flow
             options: {
               userAttributes: {
                 email: email.toLowerCase(),
@@ -326,7 +325,7 @@ const LoginScreen = () => {
                 
                 {/* ===== ERROR MESSAGE ===== */}
                 {error ? (
-                  <Text className="text-red-500 mb-3 text-center text-sm">{error}</Text>
+                  <Text className={`mb-3 text-center text-sm ${isDarkMode ? 'text-red-400' : 'text-red-500'}`}>{error}</Text>
                 ) : null}
                 
                 {/* ===== CONTINUE BUTTON ===== */}
@@ -371,7 +370,7 @@ const LoginScreen = () => {
                 
                 {/* ===== ERROR MESSAGE ===== */}
                 {error ? (
-                  <Text className="text-red-500 mb-3 text-center text-sm">{error}</Text>
+                  <Text className={`mb-3 text-center text-sm ${isDarkMode ? 'text-red-400' : 'text-red-500'}`}>{error}</Text>
                 ) : null}
                 
                 {/* ===== VERIFY BUTTON ===== */}

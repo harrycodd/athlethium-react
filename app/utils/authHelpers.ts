@@ -2,12 +2,14 @@
  * ╔══════════════════════════════════════════════════════════════════════════════════════╗
  * ║                              AUTHENTICATION HELPERS                                  ║
  * ║                                                                                      ║
- * ║ Authentication state management, auto-login checking, and navigation routing        ║
- * ║ based on auth status. Uses mock authentication for development.                     ║
+ * ║ Authentication state management using AWS Amplify. Properly validates               ║
+ * ║ authentication state with AWS Cognito instead of relying on local storage.         ║
  * ╚══════════════════════════════════════════════════════════════════════════════════════╝
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCurrentUser } from 'aws-amplify/auth';
+import { detailsApi } from '../api_calls/detailsApi';
 
 // ============================================================================
 // INTERFACES
@@ -26,52 +28,58 @@ export interface AuthState {
 
 /**
  * Check if user is authenticated and determine next route
- * Uses AsyncStorage to simulate authentication state
+ * Uses AWS Amplify to validate authentication state with Cognito
  */
 export async function checkAuthState(): Promise<AuthState> {
   try {
-    console.log('Checking authentication state...');
+    console.log('Checking authentication state with AWS Amplify...');
     
-    // Check if user has authentication data stored
-    const userId = await AsyncStorage.getItem('userId');
-    const userEmail = await AsyncStorage.getItem('userEmail');
-    const isRegistrationComplete = await AsyncStorage.getItem('registrationComplete');
+    // Check authentication with AWS Amplify/Cognito
+    const user = await getCurrentUser();
     
-    console.log('Auth data from storage:', { userId, userEmail, isRegistrationComplete });
-    
-    // If no userId, user is not authenticated
-    if (!userId) {
-      console.log('No userId found - user not authenticated');
+    if (!user) {
+      console.log('No authenticated user found');
       return { 
         isAuthenticated: false, 
         needsRegistration: false 
       };
     }
     
-    // User has authentication data
-    if (isRegistrationComplete === 'true') {
-      // User is fully authenticated and registered
-      console.log('User authenticated and registration complete');
-      return {
-        isAuthenticated: true,
-        needsRegistration: false,
-        userEmail: userEmail || undefined,
-      };
-    } else {
-      // User is authenticated but hasn't completed registration
-      console.log('User authenticated but registration incomplete');
+    console.log('User authenticated with Cognito:', {
+      userId: user.userId,
+      username: user.username
+    });
+    
+    // Check if user has completed registration by fetching user details
+    try {
+      const userDetails = await detailsApi.getUserDetails();
+      
+      if (userDetails && userDetails.signUpCompleted) {
+        console.log('User authenticated and registration complete');
+        return {
+          isAuthenticated: true,
+          needsRegistration: false,
+          userEmail: user.username,
+        };
+      } else {
+        console.log('User authenticated but registration incomplete');
+        return {
+          isAuthenticated: true,
+          needsRegistration: true,
+          userEmail: user.username,
+        };
+      }
+    } catch (detailsError) {
+      console.log('Error fetching user details, assuming registration incomplete:', detailsError);
       return {
         isAuthenticated: true,
         needsRegistration: true,
-        userEmail: userEmail || undefined,
+        userEmail: user.username,
       };
     }
     
   } catch (error: any) {
-    console.error('Error checking auth state:', error);
-    
-    // Clear any corrupted auth data
-    await AsyncStorage.multiRemove(['userId', 'userEmail', 'registrationComplete']);
+    console.log('User not authenticated with Amplify:', error.message);
     
     return { 
       isAuthenticated: false, 
@@ -82,29 +90,30 @@ export async function checkAuthState(): Promise<AuthState> {
 }
 
 /**
- * Simple function to check if a user is authenticated (without details check)
+ * Simple function to check if a user is authenticated using AWS Amplify
  */
 export async function isAuthenticated(): Promise<boolean> {
   try {
-    const userId = await AsyncStorage.getItem('userId');
-    return !!userId;
+    const user = await getCurrentUser();
+    return !!user;
   } catch (error) {
-    console.error('Auth check failed:', error);
+    console.log('User not authenticated:', error);
     return false;
   }
 }
 
 /**
- * Set user as authenticated
+ * Set user as authenticated - stores minimal data locally for convenience
+ * Primary authentication state is managed by AWS Amplify
  */
 export async function setUserAuthenticated(userId: string, email: string, registrationComplete: boolean = false): Promise<void> {
   try {
-    await AsyncStorage.setItem('userId', userId);
+    // Store minimal data locally for convenience (not used for auth validation)
     await AsyncStorage.setItem('userEmail', email);
     await AsyncStorage.setItem('registrationComplete', registrationComplete.toString());
-    console.log('User authentication state saved:', { userId, email, registrationComplete });
+    console.log('User authentication convenience data saved:', { email, registrationComplete });
   } catch (error) {
-    console.error('Error saving auth state:', error);
+    console.error('Error saving auth convenience data:', error);
   }
 }
 
@@ -121,26 +130,32 @@ export async function markRegistrationComplete(): Promise<void> {
 }
 
 /**
- * Clear all authentication data (logout)
+ * Clear all local storage data (used alongside AWS Amplify signOut)
  */
 export async function clearAuthState(): Promise<void> {
   try {
-    await AsyncStorage.multiRemove(['userId', 'userEmail', 'registrationComplete']);
-    console.log('Authentication state cleared');
+    await AsyncStorage.multiRemove(['userEmail', 'registrationComplete']);
+    console.log('Local auth convenience data cleared');
   } catch (error) {
-    console.error('Error clearing auth state:', error);
+    console.error('Error clearing local auth data:', error);
   }
 }
 
 /**
- * Get auth token for API calls (mock implementation)
+ * Get auth token for API calls using AWS Amplify
  */
 export async function getAuthToken(): Promise<string | undefined> {
   try {
-    const userId = await AsyncStorage.getItem('userId');
-    return userId ? `mock-token-${userId}` : undefined;
+    const user = await getCurrentUser();
+    if (!user) {
+      return undefined;
+    }
+    
+    // AWS Amplify handles token management automatically for API calls
+    // This function is kept for compatibility but tokens are managed by Amplify
+    return `amplify-managed-${user.userId}`;
   } catch (error) {
-    console.error('Error getting auth token:', error);
+    console.log('Error getting user for token:', error);
     return undefined;
   }
 }

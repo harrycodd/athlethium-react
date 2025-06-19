@@ -1,5 +1,4 @@
 import { Amplify } from "aws-amplify";
-import { fetchAuthSession } from "aws-amplify/auth";
 import { REGION, API_GATEWAY_URL, AUTH_CONFIG } from './config';
 
 // Track if Cognito has been configured to avoid multiple initializations

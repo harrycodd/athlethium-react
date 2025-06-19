@@ -5,7 +5,15 @@ import { get, post, put, del } from 'aws-amplify/api';
 export const getAuthToken = async (): Promise<string | undefined> => {
   try {
     const authSession = await fetchAuthSession();
-    return authSession.tokens?.idToken?.toString();
+    const idToken = authSession.tokens?.idToken?.toString();
+    
+    if (!idToken) {
+      console.warn('No ID token available in auth session');
+      return undefined;
+    }
+    
+    console.log('Auth token retrieved successfully, length:', idToken.length);
+    return idToken;
   } catch (error) {
     console.error('Error getting auth token:', error);
     return undefined;
@@ -24,8 +32,20 @@ export const makeAuthenticatedApiCall = async (options: ApiCallOptions): Promise
   const { method, path, body, apiName = 'trainingApi' } = options;
   
   try {
-    const idToken = await getAuthToken();
-    const headers = idToken ? { Authorization: idToken } : undefined;
+    const authSession = await fetchAuthSession();
+    const idToken = authSession.tokens?.idToken?.toString();
+    
+    if (!idToken) {
+      throw new Error('No authentication token available');
+    }
+    
+    // For AWS API Gateway with Cognito User Pools, use just the token without "Bearer "
+    const headers: any = {
+      'Content-Type': 'application/json',
+      'Authorization': idToken  // Remove "Bearer " prefix
+    };
+    
+    console.log(`Making ${method} request to ${path} with authorization token length:`, idToken.length);
     
     switch (method) {
       case 'GET':

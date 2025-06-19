@@ -10,9 +10,9 @@
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator, Image, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getThemedStyles } from '../styling';
 import { checkAuthState } from '../utils/authHelpers';
+import { configureAuth } from '../aws/cognito';
 
 // ============================================================================
 // INTERFACES
@@ -21,7 +21,7 @@ import { checkAuthState } from '../utils/authHelpers';
 interface LoadingScreenProps {
   onAuthCheck: (isAuthenticated: boolean, isRegistered: boolean) => void;
   isDarkMode: boolean;
-  setDarkMode: (mode: 'light' | 'dark' | 'system') => void;
+  setDarkMode?: (mode: 'light' | 'dark' | 'system') => void;
 }
 
 // ============================================================================
@@ -53,6 +53,9 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   useEffect(() => {
     const checkAuthAndNavigate = async () => {
       try {
+        // Configure AWS Amplify before checking authentication
+        configureAuth();
+        
         // Simulate loading time for splash effect
         await new Promise(resolve => setTimeout(resolve, 1500));
         

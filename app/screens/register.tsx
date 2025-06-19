@@ -40,15 +40,14 @@ import {
   Alert,
   Modal,
   Image,
+  StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
 import { useNavigation } from '@react-navigation/native';
 import { useDarkMode } from '../hooks/commonHooks';
-import { detailsApi } from '../api_calls/detailsApi';
-import { sessionApi } from '../api_calls/sessionApi';
-import { trainingApi } from '../api_calls/trainingApi';
+import { signupUser } from '../api_calls/signupApi';
 import { 
   getCurrentDateString, 
   getErrorMessage, 
@@ -76,8 +75,8 @@ const getLevelToCTL = () => ({
 
 const getContainerStyle = (isDarkMode: boolean): string => {
   return isDarkMode 
-    ? 'flex-1 bg-gradient-to-b from-slate-900 to-slate-800' 
-    : 'flex-1 bg-gradient-to-b from-gray-50 to-white';
+    ? 'flex-1 bg-slate-900' 
+    : 'flex-1 bg-gray-50';
 };
 
 const getInputStyle = (isDarkMode: boolean): string => {
@@ -371,6 +370,11 @@ const WeeklyScheduleStep: React.FC<WeeklyScheduleStepProps> = ({
   
   const targetHoursValue = React.useMemo(() => Number(targetHours) || 0, [targetHours]);
   
+  const scheduleValues = React.useMemo(() => 
+    schedule.map(d => Number(d.hours) || 0), 
+    [schedule]
+  );
+  
   const handleTargetHoursChange = React.useCallback((value: number) => {
     onTargetHoursChange(value.toString());
   }, [onTargetHoursChange]);
@@ -433,7 +437,7 @@ const WeeklyScheduleStep: React.FC<WeeklyScheduleStepProps> = ({
           </Text>
           <View className="w-full">  
             {days.map((day, i) => {
-              const scheduleHoursValue = Number(schedule[i]?.hours) || 0;
+              const scheduleHoursValue = scheduleValues[i];
               
               return (
                 <View key={day} className={`w-full mb-3 p-3 rounded-xl ${isDarkMode ? 'bg-slate-700/30' : 'bg-gray-50/70'}`}>
@@ -443,7 +447,7 @@ const WeeklyScheduleStep: React.FC<WeeklyScheduleStepProps> = ({
                     </Text>
                     <View className={`px-2 py-1 rounded-full ${isDarkMode ? 'bg-blue-900/50' : 'bg-blue-100'}`}>
                       <Text className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} text-xs`}>
-                        {schedule[i]?.hours || '0'}h
+                        {scheduleHoursValue}h
                       </Text>
                     </View>
                   </View>
@@ -1367,7 +1371,7 @@ const RegisterFlow = ({ route }: any) => {
     console.warn('Navigation context not available:', error);
   }
   
-  const { isDarkMode } = useDarkMode();
+  const { isDarkMode, darkMode, setDarkMode } = useDarkMode();
   // Get email and step from route params (from login page or auto-login)
   const initialEmail = route?.params?.email || '';
   const initialStep = route?.params?.step || 3; // Start at step 3 (target sports)
@@ -1405,7 +1409,6 @@ const RegisterFlow = ({ route }: any) => {
 
   const [chatHistoryEnabled, setChatHistoryEnabled] = useState(true);
   const [chatMemoryEnabled, setChatMemoryEnabled] = useState(true);
-  const [darkModePreference, setDarkModePreference] = useState<'light' | 'dark' | 'system'>('system');
   const [scheduleDaysAhead, setScheduleDaysAhead] = useState(1);
 
   // Sync mainFocus selections to activities when mainFocus changes
@@ -1441,13 +1444,6 @@ const RegisterFlow = ({ route }: any) => {
       }
     } catch (error) {
       console.error('Error signing out:', error);
-      // Even if logout fails, navigate to login
-      if (navigation) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Login' }],
-        });
-      }
     }
   };
 
@@ -1457,91 +1453,55 @@ const RegisterFlow = ({ route }: any) => {
   }, []);
 
   const handleRegister = async () => {
-    const user = await getCurrentUser();
-    const userId = (user.userId);
     setLoading(true);
-    console.log(mainFocus)
-    console.log(activities)
-    console.log(Object.keys(mainFocus).filter((k) => mainFocus[k as keyof typeof mainFocus] === true))
-    console.log(Object.keys(activities).filter((k) => activities[k as keyof typeof activities] === true))
     try {
-      const details = {
+      // Calculate CTL value
+      let ctlValue: number;
+      if ((Number(ctl)) == 0) {
+        const levelToCtl = getLevelToCTL();
+        ctlValue = levelToCtl[fitnessLevel];
+      } else {
+        ctlValue = Number(ctl);
+      }
+
+      // Prepare user details according to new API format
+      const userDetails = {
         signUpCompleted: true,
         name: name,
         units: units,
-        focusedSports: Object.keys(mainFocus).filter((k) => mainFocus[k as keyof typeof mainFocus] === true),
-        sports: Object.keys(activities).filter((k) => activities[k as keyof typeof activities] === true),
         intervalType: intervalType,
         uploadNotif: !!uploadNotif,
         dailyTrainingNotif: !!dailyTrainingNotif,
-        weeklyHours: targetHours ? Number(targetHours) : 0,
         defaultSchedule: schedule.map((d) => {
           const value = parseFloat(d.hours);
-          const processed = isNaN(value) ? 0 : Math.round(value * 2) / 2; // Ensure proper 0.5 step precision
+          const processed = isNaN(value) ? 0 : Math.round(value * 2) / 2;
           console.log(`[register] Converting schedule hours: "${d.hours}" -> ${processed}`);
           return processed;
         }),
         daysAhead: scheduleDaysAhead,
         chatHistoryEnabled: chatHistoryEnabled,
         chatMemoryEnabled: chatMemoryEnabled,
-        darkModePreference: darkModePreference
+        darkModePreference: darkMode
       };
-      console.log('User details:', details);
 
-      try {
-        await detailsApi.updateUserDetails(details);
-        console.log('User details saved:', details);
-      } catch (err) {
-        alert('Failed to save user details. ' + getErrorMessage(err));
-        return;
-      }
-      try {
-        let ctlValue: number; // Declare the variable in outer scope
-        if ((Number(ctl)) == 0) {
-          const levelToCtl = getLevelToCTL();
-          console.log(levelToCtl[fitnessLevel])
-          console.log(levelToCtl["Beginner"])
+      // Prepare fitness profile according to new API format
+      const fitnessProfile = {
+        mode: fitnessMode,
+        fitnessLevel: fitnessLevel.toLowerCase(),
+        focusedSports: Object.keys(mainFocus).filter((k) => mainFocus[k as keyof typeof mainFocus] === true),
+        weeklyHours: targetHours ? Number(targetHours) : 0,
+        ctl: ctlValue
+      };
 
-          ctlValue = levelToCtl[fitnessLevel]; // Assign without redeclaring
-        }
-        else {
-          ctlValue = Number(ctl); // Assign without redeclaring
-        }
-        const today = new Date(); // Use current date
-        const selectedActivities = Object.keys(activities).filter((k) => (activities as any)[k] && k !== 'yoga' && k !== 'strength');
+      console.log('User details:', userDetails);
+      console.log('Fitness profile:', fitnessProfile);
 
-        console.log(ctlValue, Math.round(ctlValue / selectedActivities.length))
-        ctlValue = Math.round(ctlValue / selectedActivities.length);
-        for (let i = 1; i < 42; i++) {
-          const date = new Date(today);
-          date.setDate(today.getDate() - i);
-          const dateStr = formatDateString(date);
-          for (const activity of selectedActivities) {
-            await sessionApi.addTraining(dateStr, {
-              tss: Math.round(ctlValue / selectedActivities.length),
-              session_focus: "-2",
-              completed: true,
-              date: dateStr,
-              name: `Auto-generated workout`,
-              sport: activity
-            });
-          }
-        }
-      } catch (err) {
-        alert('Failed to generate training history. ' + getErrorMessage(err));
-        console.log(err)
-        return;
-      }
-
-      // Manually run the update training plan API request
-      try {
-        const dateStr = getCurrentDateString();
-        await trainingApi.runTrainingAlgorithm(dateStr);
-      } catch (err) {
-        console.log(err);
-      }
-      console.log('User details saved successfully');
-      navigation.navigate('Home');
+      await signupUser(userDetails, fitnessProfile);
+      console.log('User signup completed successfully');
+      navigation.navigate('MainTabs');
+    } catch (err) {
+      alert('Failed to complete signup. ' + getErrorMessage(err));
+      console.error('Signup error:', err);
     } finally {
       setLoading(false);
     }
@@ -1554,11 +1514,17 @@ const RegisterFlow = ({ route }: any) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={-100}
     >
-      <View className={getContainerStyle(isDarkMode)}>
-        {/* Background decoration */}
-        <View className={`absolute top-0 left-0 w-full h-72 opacity-10 ${isDarkMode ? 'bg-blue-900' : 'bg-blue-100'}`} 
-              style={{ borderBottomLeftRadius: 50, borderBottomRightRadius: 50 }} />
-        
+      <StatusBar 
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'} 
+        backgroundColor={isDarkMode ? '#0F172A' : '#F9FAFB'} 
+      />
+      <View 
+        className={getContainerStyle(isDarkMode)}
+        style={{ 
+          backgroundColor: isDarkMode ? '#0F172A' : '#F9FAFB',
+          flex: 1
+        }}
+      >
         <ScrollView 
           className="flex-1" 
           showsVerticalScrollIndicator={false}
@@ -1650,8 +1616,8 @@ const RegisterFlow = ({ route }: any) => {
             )}
             {step === 10 && (
               <AppearanceStep
-                darkModePreference={darkModePreference}
-                onDarkModePreferenceChange={setDarkModePreference}
+                darkModePreference={darkMode}
+                onDarkModePreferenceChange={setDarkMode}
                 onNext={handleNextStep}
                 onBack={handlePreviousStep}
                 isDarkMode={isDarkMode}

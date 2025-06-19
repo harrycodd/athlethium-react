@@ -9,7 +9,8 @@ export const REGION = 'eu-west-2';
 // User authentication configuration
 export const AUTH_CONFIG = {
   userPoolId: 'eu-west-2_wnYIPiweh',
-  userPoolClientId: '2edmdoeh5e6k1dp55p96gs4074',
+  userPoolClientId: 'm1tup62bd00qcn9dsg4do3dhg',
+  userPoolClientSecret: '13jcsa57748jllpt9c83be18sbparg49di00s6t814nh1d9dl6c0',
   identityPoolId: 'eu-west-2:feaa8d45-e184-4754-b530-1d632a56c7c3',
 };
 
