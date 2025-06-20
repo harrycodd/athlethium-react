@@ -69,8 +69,22 @@ export async function checkAuthState(): Promise<AuthState> {
           userEmail: user.username,
         };
       }
-    } catch (detailsError) {
-      console.log('Error fetching user details, assuming registration incomplete:', detailsError);
+    } catch (detailsError: any) {
+      console.log('Error fetching user details, assuming registration incomplete:', detailsError.message);
+      
+      // If it's specifically an authentication error, treat user as not authenticated
+      if (detailsError.name === 'AuthenticationRequired' || 
+          detailsError.message?.includes('authentication') ||
+          detailsError.message?.includes('token')) {
+        console.log('Authentication error detected, treating user as not authenticated');
+        return {
+          isAuthenticated: false,
+          needsRegistration: false,
+          error: detailsError.message,
+        };
+      }
+      
+      // For other errors, assume user is authenticated but needs registration
       return {
         isAuthenticated: true,
         needsRegistration: true,

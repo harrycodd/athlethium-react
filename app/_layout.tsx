@@ -141,9 +141,13 @@ function AppWithSubscription() {
   // Handle authentication check result from LoadingScreen
   const handleAuthCheck = (isAuthenticated: boolean, isRegistered: boolean) => {
     console.log('Auth check result:', { isAuthenticated, isRegistered });
-    setIsAuthenticated(isAuthenticated);
-    setIsRegistered(isRegistered);
-    setShowLoadingScreen(false);
+    
+    // Add a small delay to ensure navigation is ready
+    setTimeout(() => {
+      setIsAuthenticated(isAuthenticated);
+      setIsRegistered(isRegistered);
+      setShowLoadingScreen(false);
+    }, 100);
   };
 
   // -------------------------------------------------------------------------
@@ -179,25 +183,43 @@ function AppWithSubscription() {
   // -------------------------------------------------------------------------
   // After loading screen is dismissed, show the full navigation stack
   // The LoadingScreen will handle initial routing to the appropriate screen
-  return (
-    <Stack.Navigator 
-      screenOptions={{ 
-        headerShown: false,
-        gestureEnabled: false, // Disable swipe to go back gesture
-      }} 
-      initialRouteName={initialRouteName}
-    >
-      {/* ===== AUTHENTICATION SCREENS ===== */}
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="RegisterFlow" component={RegisterFlow} initialParams={{email: "", step: 3}} />
-      
-      {/* ===== MAIN APP SCREENS ===== */}
-      <Stack.Screen name="MainTabs" component={MainApp} />
-      <Stack.Screen name="AddTraining" component={AddTrainingScreen} />
-      <Stack.Screen name="analysis" component={AnalysisScreen} />
-      <Stack.Screen name="SessionDetails" component={SessionDetailsScreen} />
-    </Stack.Navigator>
-  );
+  
+  // Add error boundary for navigation
+  const renderStackNavigator = () => {
+    try {
+      return (
+        <Stack.Navigator 
+          screenOptions={{ 
+            headerShown: false,
+            gestureEnabled: false, // Disable swipe to go back gesture
+          }} 
+          initialRouteName={initialRouteName}
+        >
+          {/* ===== AUTHENTICATION SCREENS ===== */}
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen} 
+            options={{ 
+              gestureEnabled: false
+            }} 
+          />
+          <Stack.Screen name="RegisterFlow" component={RegisterFlow} initialParams={{email: "", step: 3}} />
+          
+          {/* ===== MAIN APP SCREENS ===== */}
+          <Stack.Screen name="MainTabs" component={MainApp} />
+          <Stack.Screen name="AddTraining" component={AddTrainingScreen} />
+          <Stack.Screen name="analysis" component={AnalysisScreen} />
+          <Stack.Screen name="SessionDetails" component={SessionDetailsScreen} />
+        </Stack.Navigator>
+      );
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to a simple login screen
+      return <LoginScreen route={{}} />;
+    }
+  };
+
+  return renderStackNavigator();
 }
 
 // ============================================================================

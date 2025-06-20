@@ -81,9 +81,14 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
           onAuthCheck(false, false);
         }
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error during authentication check:', error);
-        // Default to login screen on error
+        
+        // Prevent navigation reset errors by ensuring we don't pass error details to navigation
+        const sanitizedError = error?.message || 'Authentication check failed';
+        console.log('Sanitized error for navigation:', sanitizedError);
+        
+        // Default to login screen on error without passing error details
         onAuthCheck(false, false);
       }
     };

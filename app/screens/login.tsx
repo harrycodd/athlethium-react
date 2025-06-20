@@ -23,7 +23,7 @@ import {
   Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { signIn, signUp, confirmSignUp, confirmSignIn, autoSignIn, getCurrentUser } from 'aws-amplify/auth';
+import { signIn, signUp, confirmSignUp, confirmSignIn, autoSignIn, getCurrentUser, resendSignUpCode } from 'aws-amplify/auth';
 import { useDarkMode } from '../hooks/commonHooks';
 import { getPlaceholderColor } from '../utils/commonUtils';
 import { getThemedStyles } from '../styling';
@@ -34,7 +34,7 @@ import "../../global.css";
 // MAIN COMPONENT
 // ============================================================================
 
-const LoginScreen = () => {
+const LoginScreen = ({ route }: any) => {
   // -------------------------------------------------------------------------
   // HOOKS & NAVIGATION
   // -------------------------------------------------------------------------
@@ -56,9 +56,18 @@ const LoginScreen = () => {
   // INITIALIZATION
   // -------------------------------------------------------------------------
   useEffect(() => {
-    // No AWS Amplify configuration needed for mock auth
-    console.log('Login screen initialized with mock authentication');
-  }, []);
+    // Handle any error passed via route params (e.g., from auto-login failures)
+    if (route?.params?.autoLoginError) {
+      console.log('Auto-login error received:', route.params.autoLoginError);
+      setError(route.params.autoLoginError);
+      // Clear the error from navigation params to prevent it from persisting
+      if (navigation.setParams) {
+        navigation.setParams({ autoLoginError: null });
+      }
+    }
+    
+    console.log('Login screen initialized');
+  }, [route?.params?.autoLoginError, navigation]);
 
   // -------------------------------------------------------------------------
   // HELPER FUNCTIONS
@@ -88,16 +97,48 @@ const LoginScreen = () => {
     }
   };
 
-  const handleSuccessfulAuth = async (userId: string) => {
+  const handleSuccessfulAuth = async (user: any) => {
     try {
       // Set user as authenticated using the auth helper
-      await setUserAuthenticated(userId, email, false); // false = registration not complete yet
+      await setUserAuthenticated(user.userId || user.username, email, false); // false = registration not complete yet
       
       // Check if user has completed their profile setup
-      await checkUserDetails(userId);
+      await checkUserDetails(user.userId || user.username);
     } catch (error) {
       console.error('Error handling successful auth:', error);
       setError('Authentication successful but profile check failed. Please try again.');
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // RESEND CODE FUNCTIONALITY
+  // -------------------------------------------------------------------------
+  
+  const handleResendCode = async () => {
+    if (!isSignUp) {
+      setError('Resend is only available for account confirmation');
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    
+    try {
+      console.log('Resending sign up verification code to:', email);
+      
+      await resendSignUpCode({
+        username: email.toLowerCase(),
+      });
+      
+      console.log('Verification code resent successfully');
+      setError(''); // Clear any previous errors
+      // You could also show a success message if needed
+      
+    } catch (error: any) {
+      console.error('Error resending verification code:', error);
+      setError(error.message || 'Failed to resend verification code. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,7 +188,7 @@ const LoginScreen = () => {
         setIsCodeSent(true);
         setIsSignUp(true);
         setError('');
-        console.log('User needs to confirm sign up');
+        console.log('User needs to confirm sign up, resend verification code using resendSignUpCode');
         return;
       } else if (signInStep === 'DONE') {
         // User is already signed in
@@ -174,7 +215,7 @@ const LoginScreen = () => {
                 email: email.toLowerCase(),
               },
               autoSignIn: {
-                enabled: true,
+                authFlowType: 'USER_AUTH',
               },
             },
           });
@@ -244,6 +285,7 @@ const LoginScreen = () => {
             if (signInResult.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_EMAIL_CODE') {
               setError('Please check your email for a new verification code');
               setCode('');
+              setIsSignUp(false);
               return;
             }
           }
@@ -388,6 +430,27 @@ const LoginScreen = () => {
                   )}
                 </TouchableOpacity>
                 
+                {/* ===== RESEND CODE BUTTON (Only for sign up) ===== */}
+                {isSignUp && (
+                  <TouchableOpacity
+                    className={`mt-4 mb-2 py-3 px-6 rounded-xl border-2 ${
+                      loading 
+                        ? `opacity-50 ${isDarkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-gray-100'}` 
+                        : `${isDarkMode ? 'border-blue-500 bg-blue-500/10' : 'border-blue-500 bg-blue-50'} active:scale-95`
+                    }`}
+                    onPress={handleResendCode}
+                    disabled={loading}
+                  >
+                    <Text className={`text-center font-semibold text-base ${
+                      loading 
+                        ? `${isDarkMode ? 'text-gray-400' : 'text-gray-500'}` 
+                        : `${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`
+                    }`}>
+                      {loading ? 'Sending...' : 'Resend Code'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                
                 {/* ===== BACK BUTTON ===== */}
                 <TouchableOpacity
                   className="mt-1"
@@ -402,6 +465,23 @@ const LoginScreen = () => {
                     Back
                   </Text>
                 </TouchableOpacity>
+
+                {/* ===== RESEND CODE BUTTON (SIGN UP ONLY) ===== */}
+                {isSignUp && (
+                  <TouchableOpacity
+                    className="mt-4"
+                    onPress={handleResendCode}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="white" />
+                    ) : (
+                      <Text className="font-bold text-lg text-white">
+                        Resend Verification Code
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                )}
               </>
             )}
             

@@ -36,7 +36,10 @@ export const makeAuthenticatedApiCall = async (options: ApiCallOptions): Promise
     const idToken = authSession.tokens?.idToken?.toString();
     
     if (!idToken) {
-      throw new Error('No authentication token available');
+      // Create a specific error that won't trigger navigation resets
+      const authError = new Error('Authentication required');
+      authError.name = 'AuthenticationRequired';
+      throw authError;
     }
     
     // For AWS API Gateway with Cognito User Pools, use just the token without "Bearer "
